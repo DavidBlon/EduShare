@@ -139,7 +139,7 @@ redis-server redis.conf
 
 - **前台首页**：http://localhost:5173
 - **后台管理**：http://localhost:5173/admin
-- **默认管理员**：`admin` / `admin123`
+- **默认管理员**：`******` / `******`
 
 ## 📖 功能模块
 
