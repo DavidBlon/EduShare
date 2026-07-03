@@ -1,0 +1,96 @@
+<svg width="900" height="240" viewBox="0 0 900 240" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <linearGradient id="blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22B8E8"/>
+      <stop offset="100%" stop-color="#1E4C89"/>
+    </linearGradient>
+
+    <linearGradient id="dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#244A76"/>
+      <stop offset="100%" stop-color="#102D4F"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Logo -->
+  <g transform="translate(40,35)">
+
+    <!-- 左页 -->
+    <path d="
+        M60 20
+        Q25 30 20 70
+        L20 110
+        Q40 95 60 100
+        Q75 103 90 118
+        L90 28
+        Q76 18 60 20Z"
+          fill="url(#blue)"/>
+
+    <!-- 右页 -->
+    <path d="
+        M100 28
+        L100 118
+        Q116 103 130 100
+        Q150 95 170 110
+        L170 70
+        Q165 30 130 20
+        Q114 18 100 28Z"
+          fill="url(#dark)"/>
+
+    <!-- 第一层书页 -->
+    <path
+            d="
+        M20 110
+        Q55 105 90 130
+        Q125 105 170 110"
+            fill="none"
+            stroke="#FFFFFF"
+            stroke-width="8"
+            stroke-linecap="round"/>
+
+    <!-- 第二层 -->
+    <path
+            d="
+        M18 126
+        Q55 118 90 143
+        Q125 118 172 126"
+            fill="none"
+            stroke="#2A5C91"
+            stroke-width="8"
+            stroke-linecap="round"/>
+
+    <!-- 底部 -->
+    <path
+            d="
+        M18 143
+        Q55 138 90 160
+        Q125 138 172 143"
+            fill="none"
+            stroke="#163B63"
+            stroke-width="8"
+            stroke-linecap="round"/>
+
+  </g>
+
+  <!-- 品牌名称 -->
+  <text
+          x="250"
+          y="105"
+          font-size="64"
+          font-weight="700"
+          fill="#16314F"
+          font-family="Microsoft YaHei, PingFang SC, sans-serif">
+    韩米智途
+  </text>
+
+  <!-- Slogan -->
+  <text
+          x="252"
+          y="155"
+          font-size="28"
+          fill="#3A3A3A"
+          font-family="Microsoft YaHei, PingFang SC, sans-serif">
+    为学生铺就智慧学习之路
+  </text>
+
+</svg>

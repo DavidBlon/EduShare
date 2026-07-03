@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wb.learningresourcelibrary.mapper.ResourceMapper">
+
+    <!-- 通用结果映射 -->
+    <resultMap id="ResourceWithCategoryMap" type="com.wb.learningresourcelibrary.entity.Resource">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="cover" property="cover"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="netdisk_link" property="netdiskLink"/>
+        <result column="netdisk_code" property="netdiskCode"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="download_count" property="downloadCount"/>
+        <result column="is_recommend" property="isRecommend"/>
+        <result column="status" property="status"/>
+        <result column="sort" property="sort"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="category_name" property="categoryName"/>
+    </resultMap>
+
+    <!-- 分页查询资源（含分类名称） -->
+    <select id="selectResourceWithCategory" resultMap="ResourceWithCategoryMap">
+        SELECT r.*, c.name AS category_name
+        FROM resource r
+        LEFT JOIN category c ON r.category_id = c.id AND c.is_deleted = 0
+        <where>
+            r.is_deleted = 0
+            <if test="query.categoryId != null">
+                AND (r.category_id = #{query.categoryId}
+                     OR r.category_id IN (
+                       SELECT id FROM category WHERE parent_id = #{query.categoryId} AND is_deleted = 0
+                     ))
+            </if>
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (r.title LIKE CONCAT('%', #{query.keyword}, '%')
+                OR r.description LIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+            <if test="query.isRecommend != null">
+                AND r.is_recommend = #{query.isRecommend}
+            </if>
+            <if test="query.tagId != null">
+                AND r.id IN (SELECT resource_id FROM resource_tag WHERE tag_id = #{query.tagId})
+            </if>
+        </where>
+        <choose>
+            <when test="query.sortBy == 'hot'">
+                ORDER BY r.view_count DESC, r.sort ASC
+            </when>
+            <when test="query.sortBy == 'recommend'">
+                ORDER BY r.is_recommend DESC, r.sort ASC, r.created_at DESC
+            </when>
+            <otherwise>
+                ORDER BY r.sort ASC, r.created_at DESC
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

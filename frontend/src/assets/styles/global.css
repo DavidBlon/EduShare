@@ -1,0 +1,165 @@
+/* ============================
+   EduShare - Global Styles
+   ============================ */
+
+:root {
+  --primary: #409eff;
+  --primary-dark: #337ecc;
+  --primary-light: #a0cfff;
+  --bg: #f5f7fa;
+  --bg-white: #ffffff;
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --text-placeholder: #c0c4cc;
+  --border: #dcdfe6;
+  --border-light: #e4e7ed;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.12);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --header-height: 64px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+a:hover {
+  color: var(--primary-dark);
+}
+
+/* Card style */
+.edu-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+.edu-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+/* Section title */
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  border-radius: 2px;
+}
+
+/* Page container */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #909399;
+}
+
+/* Element Plus overrides for enterprise feel */
+.el-button--primary {
+  --el-button-primary-text-color: #fff;
+}
+.el-card {
+  border: none;
+  border-radius: var(--radius-lg);
+}
+.el-table {
+  border-radius: var(--radius);
+}
+.el-dialog {
+  border-radius: var(--radius-lg);
+}
+.el-message {
+  min-width: 300px;
+}
+
+/* ============================
+   Mobile Responsive
+   ============================ */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 0 12px;
+  }
+
+  /* Admin tables: horizontal scroll */
+  .admin-content .el-table {
+    overflow-x: auto;
+  }
+  .admin-content .el-table .el-table__body-wrapper {
+    overflow-x: auto;
+  }
+
+  /* Admin dialogs: full width on mobile */
+  .admin-content .el-dialog {
+    --el-dialog-width: 92% !important;
+    margin: 20px auto !important;
+  }
+
+  /* Admin page headers: compact */
+  .admin-content .page-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  /* Pagination compact */
+  .admin-content .el-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+  .admin-content .el-pagination .el-pagination__total,
+  .admin-content .el-pagination .el-pagination__sizes {
+    display: none;
+  }
+}

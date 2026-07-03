@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f0f2f5"/>
+  <g transform="translate(200,150)">
+    <rect x="-30" y="-35" width="60" height="50" rx="4" fill="#c0c4cc" opacity="0.5"/>
+    <path d="M-20 -10 L10 -10 L10 -5 L-20 -5Z" fill="#909399" opacity="0.6"/>
+    <circle cx="-5" cy="-25" r="5" fill="#909399" opacity="0.4"/>
+    <line x1="-15" y1="5" x2="15" y2="5" stroke="#c0c4cc" stroke-width="2" opacity="0.4"/>
+    <line x1="-15" y1="12" x2="15" y2="12" stroke="#c0c4cc" stroke-width="2" opacity="0.4"/>
+    <line x1="-10" y1="19" x2="10" y2="19" stroke="#c0c4cc" stroke-width="2" opacity="0.4"/>
+  </g>
+  <text x="200" y="215" text-anchor="middle" fill="#909399" font-size="14" font-family="sans-serif">暂无封面</text>
+</svg>
