@@ -136,7 +136,6 @@ public class AnnouncementServiceImpl extends ServiceImpl<AnnouncementMapper, Ann
     }
 
     @Override
-    @Cacheable(value = "announcement:unread", key = "#lastReadId")
     public Long getUnreadCount(Long lastReadId) {
         if (lastReadId == null || lastReadId <= 0) {
             // 没有读过任何公告，返回总数
