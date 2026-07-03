@@ -42,10 +42,14 @@ public class UploadController {
 
         // 检查文件类型
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null) {
+        if (originalFilename == null || originalFilename.trim().isEmpty()) {
             throw BusinessException.badRequest("文件名不能为空");
         }
-        String suffix = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        int dotIndex = originalFilename.lastIndexOf(".");
+        if (dotIndex < 0 || dotIndex == originalFilename.length() - 1) {
+            throw BusinessException.badRequest("文件格式不正确，仅支持 jpg/jpeg/png/gif/webp/svg/bmp 格式的图片");
+        }
+        String suffix = originalFilename.substring(dotIndex).toLowerCase();
         if (!suffix.matches("\\.(jpg|jpeg|png|gif|webp|svg|bmp)$")) {
             throw BusinessException.badRequest("仅支持 jpg/jpeg/png/gif/webp/svg/bmp 格式的图片");
         }

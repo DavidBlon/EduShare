@@ -230,6 +230,7 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         String[] lines = block.split("\\n");
         String title = "";
         String link = "";
+        String linkLine = "";
 
         for (String line : lines) {
             line = line.trim();
@@ -240,19 +241,28 @@ public class ResourceImportServiceImpl implements ResourceImportService {
 
             Matcher linkMatcher = LINK_PATTERN.matcher(line);
             if (linkMatcher.find()) {
-                link = linkMatcher.group();
+                if (link.isEmpty()) {
+                    link = linkMatcher.group();
+                    linkLine = line;
+
+                    String titleCandidate = LINK_PATTERN.matcher(line)
+                            .replaceFirst("")
+                            .replaceAll("[\\s　\\[\\]]+", " ")
+                            .trim();
+                    if (title.isEmpty() && titleCandidate.length() > 2) {
+                        title = titleCandidate;
+                    }
+                }
             } else if (title.isEmpty() && line.length() > 2) {
                 title = line;
             }
         }
 
         // 如果只有一行且包含链接，尝试从行中分离标题和链接
-        if (title.isEmpty() && !link.isEmpty()) {
-            title = link;
-            link = "";
+        if (title.isEmpty() && !linkLine.isEmpty()) {
+            title = linkLine;
             Matcher m = LINK_PATTERN.matcher(title);
             if (m.find()) {
-                link = m.group();
                 title = title.replace(link, "").replaceAll("[\\s　\\\\[\\]]+", "").trim();
             }
         }
@@ -290,51 +300,13 @@ public class ResourceImportServiceImpl implements ResourceImportService {
             vo.setSubject(subject);
         }
 
-        // 提取年级
-        int maxGrade = 0;
-        Matcher gradeRangeMatcher = GRADE_RANGE_PATTERN.matcher(title);
-        if (gradeRangeMatcher.find()) {
-            int min = Integer.parseInt(gradeRangeMatcher.group(1));
-            int max = Integer.parseInt(gradeRangeMatcher.group(2));
-            maxGrade = max;
-            vo.setGrade(min + "-" + max + "年级");
-        } else if (title.contains("中考") && !title.contains("期中")) {
-            vo.setGrade("中考");
-        } else if (title.contains("高考")) {
-            vo.setGrade("高考");
-        }
-
-        // 提取独立年级（如"高一""初一""一年级"），仅当尚未识别到年级范围时
-        boolean hasRealZhongKao = title.contains("中考") && !title.contains("期中");
-        if (maxGrade == 0 && !hasRealZhongKao && !title.contains("高考")) {
-            Matcher sgMatcher = STANDALONE_GRADE_PATTERN.matcher(title);
-            if (sgMatcher.find()) {
-                String matchedGrade = sgMatcher.group(1);
-                vo.setGrade(matchedGrade);
-                // 根据中文年级设置 maxGrade 用于学段检测
-                if (matchedGrade.matches("[一二三四五六]年级")) {
-                    Map<String, Integer> map = Map.of("一",1,"二",2,"三",3,"四",4,"五",5,"六",6);
-                    maxGrade = map.getOrDefault(String.valueOf(matchedGrade.charAt(0)), 0);
-                } else if (matchedGrade.startsWith("初")) {
-                    Map<String, Integer> map = Map.of("一",7,"二",8,"三",9);
-                    maxGrade = map.getOrDefault(String.valueOf(matchedGrade.charAt(1)), 7);
-                } else if (matchedGrade.startsWith("高")) {
-                    Map<String, Integer> map = Map.of("一",10,"二",11,"三",12);
-                    maxGrade = map.getOrDefault(String.valueOf(matchedGrade.charAt(1)), 10);
-                }
-            } else {
-                // 尝试阿拉伯数字年级（如"7年级""8年级"）
-                Matcher agMatcher = ARABIC_GRADE_PATTERN.matcher(title);
-                if (agMatcher.find()) {
-                    int gradeNum = Integer.parseInt(agMatcher.group(1));
-                    vo.setGrade(gradeNum + "年级");
-                    maxGrade = gradeNum; // 用于 matchCategory 的学段检测
-                }
-            }
+        GradeInfo gradeInfo = analyzeGrade(title);
+        if (gradeInfo.displayName != null) {
+            vo.setGrade(gradeInfo.displayName);
         }
 
         // 匹配分类
-        matchCategory(vo, subject, maxGrade);
+        matchCategory(vo, subject, gradeInfo);
 
         // 自动检测标签
         detectTags(vo, title);
@@ -345,61 +317,19 @@ public class ResourceImportServiceImpl implements ResourceImportService {
     /**
      * 根据科目和年级匹配分类
      */
-    private void matchCategory(ParsedResourceVo vo, String subject, int maxGrade) {
-        // 确定学段
-        String levelName = null;
+    private void matchCategory(ParsedResourceVo vo, String subject, GradeInfo gradeInfo) {
+        String levelName = gradeInfo.levelName;
         String title = vo.getTitle();
-
-        if (title.contains("高考")) {
-            levelName = "高考";
-        } else if (title.contains("中考") && !title.contains("期中")) {
-            levelName = "中考";
-        } else if (maxGrade > 0) {
-            if (maxGrade <= 6) {
-                levelName = "小学";
-            } else if (maxGrade <= 9) {
-                levelName = "初中";
-            } else {
-                levelName = "高中";
-            }
-        }
-
-        // 从独立年级确定学段（如"高一"→高中，"初一"→初中）
-        if (levelName == null) {
-            Matcher sgMatcher = STANDALONE_GRADE_PATTERN.matcher(title);
-            if (sgMatcher.find()) {
-                String grade = sgMatcher.group(1);
-                if (grade.matches("[一二三四五六]年级")) {
-                    levelName = "小学";
-                } else if (grade.startsWith("初")) {
-                    levelName = "初中";
-                } else if (grade.startsWith("高")) {
-                    levelName = "高中";
-                }
-            }
-        }
 
         if (levelName == null) {
             // 无法通过学段判断，尝试试卷类资源匹配（如"高一全科试卷"→"高一试卷"）
             if (subject.isEmpty() && hasExamKeywords(title)) {
-                matchExamPaperCategory(vo, title);
+                matchExamPaperCategory(vo, gradeInfo);
             }
             if (vo.getCategoryId() != null) return;
-            // 尝试直接在科目匹配的分类下找
+            // 未识别学段时，仅在科目分类唯一的情况下匹配，避免同名科目挂错学段。
             if (!subject.isEmpty()) {
-                for (Category c : allCategories) {
-                    if (c.getName().equals(subject) && c.getParentId() != null && c.getParentId() > 0) {
-                        vo.setCategoryId(c.getId());
-                        // 找父级名称
-                        Category parent = findCategoryById(c.getParentId());
-                        if (parent != null) {
-                            vo.setCategoryName(parent.getName() + "/" + c.getName());
-                        } else {
-                            vo.setCategoryName(c.getName());
-                        }
-                        return;
-                    }
-                }
+                matchUniqueSubjectCategory(vo, subject);
             }
             return;
         }
@@ -421,7 +351,7 @@ public class ResourceImportServiceImpl implements ResourceImportService {
                 }
                 // 无具体科目，尝试匹配试卷类资源（如"高一全科试卷"→"高一试卷"）
                 if (hasExamKeywords(title)) {
-                    matchExamPaperCategory(vo, title);
+                    matchExamPaperCategory(vo, gradeInfo);
                     if (vo.getCategoryId() != null) return;
                 }
                 // 未匹配到子分类，使用顶层分类
@@ -435,19 +365,37 @@ public class ResourceImportServiceImpl implements ResourceImportService {
     /**
      * 匹配试卷类资源到对应的年级试卷分类（如"高一"→"高一试卷"）
      */
-    private void matchExamPaperCategory(ParsedResourceVo vo, String title) {
-        Matcher gradeMatcher = STANDALONE_GRADE_PATTERN.matcher(title);
-        if (gradeMatcher.find()) {
-            String gradeText = gradeMatcher.group(1);
-            String examCatName = gradeText + "试卷";
-            for (Category c : allCategories) {
-                if (c.getName().equals(examCatName)) {
-                    vo.setCategoryId(c.getId());
-                    Category parent = findCategoryById(c.getParentId());
-                    vo.setCategoryName(parent != null ? parent.getName() + "/" + c.getName() : c.getName());
-                    vo.setSubject("全科");
-                    return;
+    private void matchExamPaperCategory(ParsedResourceVo vo, GradeInfo gradeInfo) {
+        List<String> candidateNames = new ArrayList<>();
+        if (gradeInfo.standaloneName != null) {
+            candidateNames.add(gradeInfo.standaloneName + "试卷");
+        }
+        if (gradeInfo.minGrade > 0 && gradeInfo.maxGrade > 0) {
+            if (gradeInfo.minGrade == gradeInfo.maxGrade) {
+                String gradeName = toGradeCategoryName(gradeInfo.maxGrade);
+                if (gradeName != null) {
+                    candidateNames.add(gradeName + "试卷");
                 }
+            } else {
+                candidateNames.add(gradeInfo.minGrade + "-" + gradeInfo.maxGrade + "年级试卷");
+                candidateNames.add(gradeInfo.minGrade + "-" + gradeInfo.maxGrade + "年试卷");
+            }
+        }
+
+        for (String examCatName : candidateNames) {
+            Category category = findCategoryByNameAndLevel(examCatName, gradeInfo.levelName);
+            if (category != null) {
+                assignCategory(vo, category);
+                vo.setSubject("全科");
+                return;
+            }
+        }
+
+        if (gradeInfo.isRange() && gradeInfo.levelName != null) {
+            Category top = findTopCategoryByName(gradeInfo.levelName);
+            if (top != null) {
+                assignCategory(vo, top);
+                vo.setSubject("全科");
             }
         }
     }
@@ -521,5 +469,142 @@ public class ResourceImportServiceImpl implements ResourceImportService {
             if (c.getId().equals(id)) return c;
         }
         return null;
+    }
+
+    private GradeInfo analyzeGrade(String title) {
+        GradeInfo info = new GradeInfo();
+
+        Matcher gradeRangeMatcher = GRADE_RANGE_PATTERN.matcher(title);
+        if (gradeRangeMatcher.find()) {
+            int min = Integer.parseInt(gradeRangeMatcher.group(1));
+            int max = Integer.parseInt(gradeRangeMatcher.group(2));
+            info.minGrade = min;
+            info.maxGrade = max;
+            info.displayName = min + "-" + max + "年级";
+            info.levelName = resolveLevelName(max);
+            return info;
+        }
+
+        if (title.contains("中考") && !title.contains("期中")) {
+            info.displayName = "中考";
+            info.levelName = "中考";
+            return info;
+        }
+        if (title.contains("高考")) {
+            info.displayName = "高考";
+            info.levelName = "高考";
+            return info;
+        }
+
+        Matcher sgMatcher = STANDALONE_GRADE_PATTERN.matcher(title);
+        if (sgMatcher.find()) {
+            String matchedGrade = sgMatcher.group(1);
+            int gradeNum = resolveStandaloneGradeNumber(matchedGrade);
+            info.minGrade = gradeNum;
+            info.maxGrade = gradeNum;
+            info.displayName = matchedGrade;
+            info.standaloneName = matchedGrade;
+            info.levelName = resolveLevelName(gradeNum);
+            return info;
+        }
+
+        Matcher agMatcher = ARABIC_GRADE_PATTERN.matcher(title);
+        if (agMatcher.find()) {
+            int gradeNum = Integer.parseInt(agMatcher.group(1));
+            info.minGrade = gradeNum;
+            info.maxGrade = gradeNum;
+            info.displayName = gradeNum + "年级";
+            info.levelName = resolveLevelName(gradeNum);
+        }
+
+        return info;
+    }
+
+    private int resolveStandaloneGradeNumber(String grade) {
+        if (grade.matches("[一二三四五六]年级")) {
+            Map<String, Integer> map = Map.of("一", 1, "二", 2, "三", 3, "四", 4, "五", 5, "六", 6);
+            return map.getOrDefault(String.valueOf(grade.charAt(0)), 0);
+        }
+        if (grade.startsWith("初")) {
+            Map<String, Integer> map = Map.of("一", 7, "二", 8, "三", 9);
+            return map.getOrDefault(String.valueOf(grade.charAt(1)), 0);
+        }
+        if (grade.startsWith("高")) {
+            Map<String, Integer> map = Map.of("一", 10, "二", 11, "三", 12);
+            return map.getOrDefault(String.valueOf(grade.charAt(1)), 0);
+        }
+        return 0;
+    }
+
+    private String resolveLevelName(int maxGrade) {
+        if (maxGrade <= 0) return null;
+        if (maxGrade <= 6) return "小学";
+        if (maxGrade <= 9) return "初中";
+        return "高中";
+    }
+
+    private String toGradeCategoryName(int gradeNum) {
+        return switch (gradeNum) {
+            case 1 -> "一年级";
+            case 2 -> "二年级";
+            case 3 -> "三年级";
+            case 4 -> "四年级";
+            case 5 -> "五年级";
+            case 6 -> "六年级";
+            case 7 -> "初一";
+            case 8 -> "初二";
+            case 9 -> "初三";
+            case 10 -> "高一";
+            case 11 -> "高二";
+            case 12 -> "高三";
+            default -> null;
+        };
+    }
+
+    private void matchUniqueSubjectCategory(ParsedResourceVo vo, String subject) {
+        List<Category> matches = allCategories.stream()
+                .filter(c -> c.getName().equals(subject))
+                .filter(c -> c.getParentId() != null && c.getParentId() > 0)
+                .toList();
+        if (matches.size() == 1) {
+            assignCategory(vo, matches.get(0));
+        }
+    }
+
+    private Category findTopCategoryByName(String name) {
+        return childrenMap.getOrDefault(0L, Collections.emptyList()).stream()
+                .filter(c -> c.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Category findCategoryByNameAndLevel(String name, String levelName) {
+        for (Category c : allCategories) {
+            if (!c.getName().equals(name)) continue;
+            if (levelName == null) return c;
+            Category parent = findCategoryById(c.getParentId());
+            if (parent != null && parent.getName().equals(levelName)) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    private void assignCategory(ParsedResourceVo vo, Category category) {
+        vo.setCategoryId(category.getId());
+        Category parent = findCategoryById(category.getParentId());
+        vo.setCategoryName(parent != null ? parent.getName() + "/" + category.getName() : category.getName());
+    }
+
+    private static class GradeInfo {
+        private String displayName;
+        private String levelName;
+        private String standaloneName;
+        private int minGrade;
+        private int maxGrade;
+
+        private boolean isRange() {
+            return minGrade > 0 && maxGrade > 0 && minGrade != maxGrade;
+        }
     }
 }

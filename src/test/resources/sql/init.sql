@@ -75,6 +75,19 @@ CREATE TABLE IF NOT EXISTS `download_log` (
     PRIMARY KEY (`id`)
 );
 
+CREATE TABLE IF NOT EXISTS `keyword_rule` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `keyword` VARCHAR(50) NOT NULL,
+    `type` VARCHAR(20) NOT NULL,
+    `target_name` VARCHAR(100) NOT NULL,
+    `sort` INT DEFAULT 0,
+    `status` TINYINT DEFAULT 1,
+    `is_deleted` TINYINT DEFAULT 0,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+);
+
 CREATE TABLE IF NOT EXISTS `announcement` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(255) NOT NULL,
@@ -95,10 +108,20 @@ INSERT INTO `category` (`id`, `name`, `parent_id`, `sort`, `level`, `description
 (1,  '小学',     0,  1,  1, '小学阶段教育资源'),
 (11, '语文',     1,  1,  1, '小学语文'),
 (12, '数学',     1,  2,  1, '小学数学'),
+(13, '英语',     1,  3,  1, '小学英语'),
+(15, '一年级试卷', 1, 10, 1, '小学一年级试卷'),
+(110, '六年级试卷', 1, 15, 1, '小学六年级试卷'),
 (2,  '初中',     0,  2,  2, '初中阶段教育资源'),
-(21, '语文',     2,  1,  2, '初中语文');
+(21, '语文',     2,  1,  2, '初中语文'),
+(23, '英语',     2,  3,  2, '初中英语'),
+(3,  '高中',     0,  3,  3, '高中阶段教育资源'),
+(33, '英语',     3,  3,  3, '高中英语'),
+(310, '高一试卷', 3, 10, 3, '高一年级试卷');
 
 INSERT INTO `tag` (`id`, `name`, `sort`) VALUES
 (1, '期中考试',  1),
 (2, '期末考试',  2),
 (3, '单元测试',  3);
+
+INSERT INTO `keyword_rule` (`keyword`, `type`, `target_name`, `sort`) VALUES
+('试卷', 'TAG', '期末考试', 1);
