@@ -39,8 +39,8 @@
       </div>
     </el-card>
 
-    <!-- Step 2: 预览结果 -->
-    <el-card v-if="parsedList.length > 0" class="import-card" shadow="never">
+    <!-- Step 2: 预览结果（导入成功后替换为结果卡片） -->
+    <el-card v-if="parsedList.length > 0 && !hasImported" class="import-card" shadow="never">
       <template #header>
         <div class="card-header">
           <span>第二步：确认解析结果（可编辑）</span>
@@ -165,8 +165,8 @@
       </div>
     </el-card>
 
-    <!-- 导入结果 -->
-    <el-card v-if="importResult" ref="resultRef" class="import-card" shadow="never">
+    <!-- 导入结果（直接替换第二步） -->
+    <el-card v-if="importResult" class="import-card" shadow="never">
       <template #header>
         <div class="card-header">
           <span>导入结果</span>
@@ -191,7 +191,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { parseImportText, batchImportResources } from '@/api/import'
 import { getCategoryTree } from '@/api/category'
 import { getTagList } from '@/api/tag'
@@ -204,7 +204,6 @@ const parsing = ref(false)
 const importing = ref(false)
 const importResult = ref(null)
 const hasImported = ref(false) // 防止重复导入
-const resultRef = ref(null) // 结果卡片引用，用于自动滚动
 
 // 分类选项（扁平化树为选择器选项）
 const categoryOptions = ref([])
@@ -314,9 +313,6 @@ async function handleBatchImport() {
       skippedNoCategory: uncategorizedCount
     }
     hasImported.value = true
-    // 自动滚动到结果区域
-    await nextTick()
-    resultRef.value?.$el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     const parts = [`成功导入 ${validList.length} 条`]
     if (dupCountVal > 0) parts.push(`跳过 ${dupCountVal} 条重复`)
     if (uncategorizedCount > 0) parts.push(`跳过 ${uncategorizedCount} 条未分类`)
