@@ -45,6 +45,7 @@
                 :src="resource.cover"
                 :alt="resource.title"
                 fit="contain"
+                lazy
                 :preview-src-list="[resource.cover]"
                 style="max-height:400px;width:100%;"
               />

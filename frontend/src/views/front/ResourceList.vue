@@ -153,7 +153,10 @@
                 <img
                   :src="item.cover || defaultCover"
                   :alt="item.title"
+                  loading="lazy"
                   @error="e => e.target.src = defaultCover"
+                  @load="e => e.target.classList.add('loaded')"
+                  class="blur-load"
                 />
               </div>
               <div class="item-info">
@@ -525,8 +528,20 @@ function formatDate(date) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.3s, opacity 0.5s ease, filter 0.5s ease;
 }
+
+/* Blur-up lazy loading */
+.item-cover img.blur-load {
+  filter: blur(16px);
+  opacity: 0.4;
+}
+
+.item-cover img.blur-load.loaded {
+  filter: blur(0);
+  opacity: 1;
+}
+
 .resource-item:hover .item-cover img {
   transform: scale(1.05);
 }

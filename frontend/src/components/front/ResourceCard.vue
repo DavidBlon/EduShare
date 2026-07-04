@@ -4,7 +4,10 @@
       <img
         :src="resource.cover ? resource.cover : defaultCover"
         :alt="resource.title"
+        loading="lazy"
         @error="e => e.target.src = defaultCover"
+        @load="e => e.target.classList.add('loaded')"
+        class="blur-load"
       />
       <div class="card-status" v-if="resource.status === 0">
         <el-tag size="small" type="info">草稿</el-tag>
@@ -81,8 +84,20 @@ function truncate(text, len) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.4s ease, opacity 0.5s ease, filter 0.5s ease;
 }
+
+/* Blur-up lazy loading */
+.card-cover img.blur-load {
+  filter: blur(20px);
+  opacity: 0.4;
+}
+
+.card-cover img.blur-load.loaded {
+  filter: blur(0);
+  opacity: 1;
+}
+
 .resource-card:hover .card-cover img {
   transform: scale(1.08);
 }
