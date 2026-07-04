@@ -43,9 +43,11 @@ public class ResourceImportServiceImpl implements ResourceImportService {
     private static final Pattern GRADE_RANGE_PATTERN =
             Pattern.compile("(\\d+)[-、](\\d+)[年年级]?");
 
-    // 独立年级：如 "高一" "高二" "高三" "初一" "初二" "初三" "一年级" ~ "六年级"
+    // 独立年级：如 "高一" "高二" "高三" "初一" "初二" "初三"
+    //           "一年级" ~ "六年级" "七年级" "八年级" "九年级"
+    //           "七上" "七下" "八上" "八下" "九上" "九下"
     private static final Pattern STANDALONE_GRADE_PATTERN =
-            Pattern.compile("(初[一二三]|高[一二三]|[一二三四五六]年级)");
+            Pattern.compile("(初[一二三]|高[一二三]|[一二三四五六七八九]年级|[七八九][上下])");
 
     // 阿拉伯数字年级：如 "7年级" "8年级" "9年级"（须在 Chinese 版没匹配时使用）
     private static final Pattern ARABIC_GRADE_PATTERN =
@@ -521,8 +523,16 @@ public class ResourceImportServiceImpl implements ResourceImportService {
     }
 
     private int resolveStandaloneGradeNumber(String grade) {
-        if (grade.matches("[一二三四五六]年级")) {
-            Map<String, Integer> map = Map.of("一", 1, "二", 2, "三", 3, "四", 4, "五", 5, "六", 6);
+        if (grade.matches("[一二三四五六七八九]年级")) {
+            Map<String, Integer> map = Map.of(
+                    "一", 1, "二", 2, "三", 3, "四", 4, "五", 5, "六", 6,
+                    "七", 7, "八", 8, "九", 9
+            );
+            return map.getOrDefault(String.valueOf(grade.charAt(0)), 0);
+        }
+        // "七上" "七下" "八上" "八下" "九上" "九下"
+        if (grade.matches("[七八九][上下]")) {
+            Map<String, Integer> map = Map.of("七", 7, "八", 8, "九", 9);
             return map.getOrDefault(String.valueOf(grade.charAt(0)), 0);
         }
         if (grade.startsWith("初")) {
