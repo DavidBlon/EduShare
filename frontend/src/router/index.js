@@ -137,7 +137,7 @@ const router = createRouter({
 
 // 路由守卫 - 管理后台需要登录 + 角色校验
 router.beforeEach((to, from, next) => {
-  document.title = (to.meta.title ? to.meta.title + ' - ' : '') + '韩米智途'
+  document.title = (to.meta.title ? to.meta.title + ' - ' : '') + '小初学习资料圈'
 
   if (to.path.startsWith('/admin') && to.path !== '/admin/login') {
     const token = localStorage.getItem('adminToken')

@@ -4,7 +4,7 @@
     <header class="site-header">
       <div class="header-inner">
         <router-link to="/" class="logo">
-          <img src="/favicon.svg" alt="韩米智途" class="logo-img" />
+          <img src="/logo.jpg" alt="小初学习资料圈" class="logo-img" />
         </router-link>
 
         <nav class="main-nav">
@@ -91,7 +91,8 @@
         <div class="footer-grid">
           <div class="footer-brand">
             <div class="footer-logo">
-              <img src="/favicon.svg" alt="韩米智途" class="footer-logo-img" />
+              <img src="/logo.jpg" alt="小初学习资料圈" class="footer-logo-img" />
+              <span class="footer-logo-text">小初学习资料圈</span>
             </div>
             <p class="footer-desc">
               致力于为广大师生提供优质的教育资源共享服务，让知识传递更加便捷高效。
@@ -118,7 +119,7 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2024 韩米智途. All rights reserved.</p>
+          <p>&copy; 2024 小初学习资料圈. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -297,7 +298,9 @@ function goAdmin() {
 
 .logo-img {
   height: 50px;
-  width: auto;
+  width: 50px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .main-nav {
@@ -475,7 +478,18 @@ function goAdmin() {
 
 .footer-logo-img {
   height: 60px;
-  width: auto;
+  width: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.footer-logo-text {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .footer-desc {
@@ -526,6 +540,7 @@ function goAdmin() {
   }
   .logo-img {
     height: 28px;
+    width: 28px;
     flex-shrink: 0;
   }
   .main-nav {
@@ -556,6 +571,10 @@ function goAdmin() {
   }
   .footer-logo-img {
     height: 40px;
+    width: 40px;
+  }
+  .footer-logo-text {
+    font-size: 20px;
   }
 }
 </style>

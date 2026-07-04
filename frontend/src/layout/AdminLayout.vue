@@ -12,7 +12,7 @@
     >
       <div class="sidebar-header">
         <div class="sidebar-logo">
-          <img src="/favicon.svg" alt="韩米智途" class="sidebar-logo-img" :class="{ collapsed: isCollapse }" />
+          <img src="/logo.jpg" alt="小初学习资料圈" class="sidebar-logo-img" :class="{ collapsed: isCollapse }" />
         </div>
       </div>
 
@@ -357,15 +357,15 @@ function handleCommand(command) {
 }
 
 .sidebar-logo-img {
-  height: 64px;
-  width: 100%;
+  height: 48px;
+  width: 48px;
+  border-radius: 50%;
   object-fit: cover;
   transition: all 0.3s;
 }
 .sidebar-logo-img.collapsed {
-  height: 64px;
-  width: 100%;
-  object-fit: cover;
+  height: 40px;
+  width: 40px;
 }
 
 /* ====== Bell notification menu item ====== */

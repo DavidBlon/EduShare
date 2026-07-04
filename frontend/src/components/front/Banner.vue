@@ -33,7 +33,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({
-  title: { type: String, default: '韩米智途 - 教育资源共享平台' },
+  title: { type: String, default: '小初学习资料圈 - 教育资源共享平台' },
   subtitle: { type: String, default: '汇聚优质教育资源，助力每一位学习者' },
   showSearch: { type: Boolean, default: true },
   bgStart: { type: String, default: '#1a1a2e' },

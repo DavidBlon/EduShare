@@ -185,9 +185,35 @@ async function getNetdisk() {
   }
 }
 
+// 兼容 HTTP 环境的剪贴板写入（navigator.clipboard 需要 HTTPS）
+function copyToClipboard(text) {
+  // 优先使用 Clipboard API（HTTPS 环境）
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text)
+  }
+  // 降级方案：textarea + execCommand（兼容 HTTP）
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    try {
+      const successful = document.execCommand('copy')
+      if (successful) resolve()
+      else reject(new Error('execCommand copy failed'))
+    } catch (e) {
+      reject(e)
+    } finally {
+      document.body.removeChild(textarea)
+    }
+  })
+}
+
 async function copyLink() {
   try {
-    await navigator.clipboard.writeText(netdiskInfo.netdiskLink)
+    await copyToClipboard(netdiskInfo.netdiskLink)
     linkCopied.value = true
     ElMessage.success('链接已复制到剪贴板')
     setTimeout(() => { linkCopied.value = false }, 2000)
@@ -198,7 +224,7 @@ async function copyLink() {
 
 async function copyCode() {
   try {
-    await navigator.clipboard.writeText(netdiskInfo.netdiskCode)
+    await copyToClipboard(netdiskInfo.netdiskCode)
     codeCopied.value = true
     ElMessage.success('提取码已复制到剪贴板')
     setTimeout(() => { codeCopied.value = false }, 2000)

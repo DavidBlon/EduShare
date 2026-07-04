@@ -3,9 +3,11 @@
     <div class="login-card">
       <div class="login-header">
         <div class="login-logo">
-          <span class="logo-icon">E</span>
+          <div class="login-logo-circle">
+            <img src="/logo.jpg" alt="小初学习资料圈" />
+          </div>
         </div>
-        <h2 class="login-title">韩米智途 管理后台</h2>
+        <h2 class="login-title">小初学习资料圈 管理后台</h2>
         <p class="login-subtitle">教育资源共享平台</p>
       </div>
 
@@ -155,17 +157,21 @@ async function handleLogin() {
   margin-bottom: 16px;
 }
 
-.logo-icon {
+.login-logo-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
   display: inline-flex;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  border-radius: 14px;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 28px;
-  font-weight: 800;
+}
+.login-logo-circle img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  transform: scale(1.12);
 }
 
 .login-title {
