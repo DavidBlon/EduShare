@@ -41,7 +41,7 @@
       <div class="page-container">
         <h2 class="section-title">热门资源</h2>
         <div v-if="hotResources.length" class="resource-grid">
-          <ResourceCard v-for="item in hotResources" :key="item.id" :resource="item" />
+          <ResourceCard v-for="item in hotResources.slice(0, 4)" :key="item.id" :resource="item" />
         </div>
         <el-empty v-else-if="!hotLoading" description="暂无热门资源" />
         <div v-if="hotLoading" class="resource-grid">
@@ -66,7 +66,7 @@
       <div class="page-container">
         <h2 class="section-title">最新资源</h2>
         <div v-if="latestResources.length" class="resource-grid">
-          <ResourceCard v-for="item in latestResources" :key="item.id" :resource="item" />
+          <ResourceCard v-for="item in latestResources.slice(0, 4)" :key="item.id" :resource="item" />
         </div>
         <el-empty v-else-if="!latestLoading" description="暂无最新资源" />
         <div v-if="latestLoading" class="resource-grid">
