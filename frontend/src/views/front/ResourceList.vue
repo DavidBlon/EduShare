@@ -184,6 +184,9 @@
               :total="total"
               :page-sizes="[10, 20, 30]"
               layout="total, sizes, prev, pager, next"
+              small
+              background
+              :pager-count="mobile ? 3 : 7"
               @current-change="loadResources"
               @size-change="loadResources"
             />
@@ -195,7 +198,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { searchResources } from '@/api/resource'
 import { getCategoryTree } from '@/api/category'
@@ -211,6 +214,7 @@ const resources = ref([])
 const total = ref(0)
 const loading = ref(false)
 const showFilter = ref(false)
+const mobile = ref(false)
 
 // 控制各大类（小学/初中/高中/中考/高考）下面科目的展开状态
 const expandedParents = ref(new Set())
@@ -224,7 +228,14 @@ const query = reactive({
   sortBy: ''
 })
 
+function checkMobile() {
+  mobile.value = window.innerWidth < 768
+}
+
 onMounted(async () => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+
   // Read query params from URL
   if (route.query.keyword) query.keyword = route.query.keyword
   if (route.query.categoryId) query.categoryId = Number(route.query.categoryId)
@@ -240,6 +251,10 @@ onMounted(async () => {
 
   // Load resources
   loadResources()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 
 function toggleParent(id) {
@@ -616,6 +631,14 @@ function formatDate(date) {
   }
   .main-section {
     padding-top: 20px !important;
+  }
+  .pagination-wrapper {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 8px;
+  }
+  .pagination-wrapper :deep(.el-pagination) {
+    white-space: nowrap;
   }
 }
 

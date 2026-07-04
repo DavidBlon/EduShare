@@ -48,7 +48,6 @@
 
       <div class="login-footer">
         <router-link to="/">返回前台</router-link>
-        <span class="default-account">默认账号：admin / admin123</span>
       </div>
     </div>
   </div>
