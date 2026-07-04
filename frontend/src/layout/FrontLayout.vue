@@ -80,7 +80,9 @@
     <main class="site-main">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
-          <component :is="Component" />
+          <keep-alive :include="['ResourceList']">
+            <component :is="Component" />
+          </keep-alive>
         </transition>
       </router-view>
     </main>

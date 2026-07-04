@@ -130,7 +130,11 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
+  scrollBehavior(to, from, savedPosition) {
+    // keep-alive 缓存的页面（如 ResourceList）由组件内部的 onActivated 恢复滚动
+    if (savedPosition) {
+      return savedPosition
+    }
     return { top: 0 }
   }
 })

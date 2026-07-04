@@ -201,15 +201,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, onActivated, onDeactivated, defineOptions } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { searchResources } from '@/api/resource'
 import { getCategoryTree } from '@/api/category'
 import { getTagList } from '@/api/tag'
 
+defineOptions({ name: 'ResourceList' })
+
 const route = useRoute()
 const router = useRouter()
 const defaultCover = '/default-cover.svg'
+const scrollTop = ref(0)
 
 const categories = ref([])
 const tags = ref([])
@@ -258,6 +261,18 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+})
+
+// keep-alive: 从详情页返回时恢复滚动位置
+onActivated(() => {
+  if (scrollTop.value > 0) {
+    window.scrollTo({ top: scrollTop.value, behavior: 'auto' })
+  }
+})
+
+// keep-alive: 离开时保存滚动位置
+onDeactivated(() => {
+  scrollTop.value = window.scrollY
 })
 
 function toggleParent(id) {
