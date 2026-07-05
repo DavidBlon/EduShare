@@ -1,0 +1,134 @@
+[1mdiff --git a/frontend/package-lock.json b/frontend/package-lock.json[m
+[1mindex 2e2d1d0..96e7d6d 100644[m
+[1m--- a/frontend/package-lock.json[m
+[1m+++ b/frontend/package-lock.json[m
+[36m@@ -660,9 +660,6 @@[m
+         "arm"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -677,9 +674,6 @@[m
+         "arm"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -694,9 +688,6 @@[m
+         "arm64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -711,9 +702,6 @@[m
+         "arm64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -728,9 +716,6 @@[m
+         "loong64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -745,9 +730,6 @@[m
+         "loong64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -762,9 +744,6 @@[m
+         "ppc64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -779,9 +758,6 @@[m
+         "ppc64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -796,9 +772,6 @@[m
+         "riscv64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -813,9 +786,6 @@[m
+         "riscv64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -830,9 +800,6 @@[m
+         "s390x"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -847,9 +814,6 @@[m
+         "x64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -864,9 +828,6 @@[m
+         "x64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
