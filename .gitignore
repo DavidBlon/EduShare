@@ -48,6 +48,12 @@ uploads/
 .DS_Store
 Thumbs.db
 
+# Config
+src/main/resources/application.properties
+
+# Keys / Secrets
+github key.txt
+
 # Runtime uploads
 upload/
 up/

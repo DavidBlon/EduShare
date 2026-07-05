@@ -59,7 +59,8 @@ public class UploadController {
         String fileName = System.currentTimeMillis() + "_" + cn.hutool.core.util.IdUtil.fastSimpleUUID() + suffix;
         String filePath = Constants.COVER_DIR + File.separator + dateDir + File.separator + fileName;
 
-        File dest = new File(uploadPath + File.separator + filePath);
+        // 使用绝对路径，避免 transferTo 将相对路径解析到 Tomcat 临时目录
+        File dest = new File(uploadPath + File.separator + filePath).getAbsoluteFile();
         File parentDir = dest.getParentFile();
         if (!parentDir.exists()) {
             parentDir.mkdirs();
@@ -108,8 +109,9 @@ public class UploadController {
         }
 
         // 保存到固定路径，直接覆盖旧文件
+        // 使用绝对路径，避免 transferTo 将相对路径解析到 Tomcat 临时目录
         String savePath = uploadPath + "/group-qrcode.png";
-        File dest = new File(savePath);
+        File dest = new File(savePath).getAbsoluteFile();
         File parentDir = dest.getParentFile();
         if (!parentDir.exists()) {
             parentDir.mkdirs();
