@@ -14,6 +14,8 @@ import com.wb.learningresourcelibrary.mapper.TagMapper;
 import com.wb.learningresourcelibrary.service.CategoryService;
 import com.wb.learningresourcelibrary.service.ResourceImportService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,10 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ResourceImportServiceImpl implements ResourceImportService {
+
+    private static final Logger log = LoggerFactory.getLogger(ResourceImportServiceImpl.class);
+    private static final long PARSE_CONTEXT_CACHE_MILLIS = 60_000L;
+    private static final int DUPLICATE_QUERY_BATCH_SIZE = 500;
 
     private final CategoryService categoryService;
     private final ResourceMapper resourceMapper;
@@ -59,30 +65,16 @@ public class ResourceImportServiceImpl implements ResourceImportService {
 
     // 链接正则
     private static final Pattern LINK_PATTERN =
-            Pattern.compile("(https?://[^\\s]+)");
+            Pattern.compile("(https?://\\S+?)(?=[\\s，。；：、）)】》」』]|$)");
 
     // === 以下为动态加载的规则（从数据库读取，不再硬编码） ===
 
-    /** 科目正则（由 loadCategoryData 从 category 表子分类名称动态构建） */
-    private Pattern subjectPattern;
-
-    /** 教材版本正则（由 loadKeywordRules 从 keyword_rule 表 VERSION 类型规则构建） */
-    private Pattern versionPattern;
-
-    /** 标签关键词映射 关键词→标签名（由 loadKeywordRules 从 keyword_rule 表 TAG 类型规则构建） */
-    private Map<String, String> tagKeywordMap;
-
-    /** 缓存所有标签名→ID */
-    private Map<String, Long> tagNameIdCache;
-
-    /** 缓存分类数据 */
-    private List<Category> allCategories;
-    private Map<Long, List<Category>> childrenMap;
+    private volatile ParseContext cachedContext;
+    private volatile long cachedContextLoadedAt;
 
     @Override
     public List<ParsedResourceVo> parseText(String text) {
-        loadCategoryData();
-        loadKeywordRules();
+        ParseContext context = getParseContext();
 
         // 分割文本块（按空行分隔）
         String[] blocks = text.split("\\n\\s*\\n");
@@ -92,9 +84,15 @@ public class ResourceImportServiceImpl implements ResourceImportService {
             block = block.trim();
             if (block.isEmpty()) continue;
 
-            ParsedResourceVo vo = parseBlock(block);
-            if (vo != null) {
-                result.add(vo);
+            try {
+                ParsedResourceVo vo = parseBlock(context, block);
+                if (vo != null) {
+                    vo.setParseSuccess(true);
+                    result.add(vo);
+                }
+            } catch (RuntimeException ex) {
+                log.warn("Failed to parse import block: {}", abbreviate(block), ex);
+                result.add(parseFailure(block, ex));
             }
         }
 
@@ -114,18 +112,24 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         for (ParsedResourceVo vo : parsedList) {
             if (vo.getNetdiskLink() != null && !vo.getNetdiskLink().isEmpty()) {
                 String normalized = vo.getNetdiskLink().trim();
-                links.add(normalized);
+                if (!linkIndex.containsKey(normalized)) {
+                    links.add(normalized);
+                }
                 linkIndex.put(normalized, vo);
             }
         }
         if (links.isEmpty()) return;
 
         // 批量查询已存在的链接
-        List<Resource> existing = resourceMapper.selectList(
-                new LambdaQueryWrapper<Resource>()
-                        .in(Resource::getNetdiskLink, links)
-                        .select(Resource::getNetdiskLink)
-        );
+        List<Resource> existing = new ArrayList<>();
+        for (int i = 0; i < links.size(); i += DUPLICATE_QUERY_BATCH_SIZE) {
+            List<String> batch = links.subList(i, Math.min(i + DUPLICATE_QUERY_BATCH_SIZE, links.size()));
+            existing.addAll(resourceMapper.selectList(
+                    new LambdaQueryWrapper<Resource>()
+                            .in(Resource::getNetdiskLink, batch)
+                            .select(Resource::getNetdiskLink)
+            ));
+        }
 
         Set<String> existingLinks = new HashSet<>();
         for (Resource r : existing) {
@@ -143,15 +147,44 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         }
     }
 
+    private ParseContext getParseContext() {
+        long now = System.currentTimeMillis();
+        ParseContext context = cachedContext;
+        if (context != null && now - cachedContextLoadedAt < PARSE_CONTEXT_CACHE_MILLIS) {
+            return context;
+        }
+        synchronized (this) {
+            now = System.currentTimeMillis();
+            context = cachedContext;
+            if (context != null && now - cachedContextLoadedAt < PARSE_CONTEXT_CACHE_MILLIS) {
+                return context;
+            }
+            CategoryData categoryData = loadCategoryData();
+            KeywordData keywordData = loadKeywordRules();
+            ParseContext refreshed = new ParseContext(categoryData, keywordData);
+            cachedContext = refreshed;
+            cachedContextLoadedAt = now;
+            return refreshed;
+        }
+    }
+
+    private Map<Long, List<Category>> copyChildrenMap(Map<Long, List<Category>> childrenMap) {
+        Map<Long, List<Category>> copy = new HashMap<>();
+        for (Map.Entry<Long, List<Category>> entry : childrenMap.entrySet()) {
+            copy.put(entry.getKey(), List.copyOf(entry.getValue()));
+        }
+        return Collections.unmodifiableMap(copy);
+    }
+
     /**
      * 加载分类数据到缓存，并动态构建科目正则
      *
      * 从 category 表所有子分类中提取名称（排除以"试卷"结尾的）构建科目匹配正则，
      * 这样管理员在后台新增科目分类后，解析器会自动识别，无需修改代码。
      */
-    private void loadCategoryData() {
-        allCategories = categoryService.list();
-        childrenMap = new HashMap<>();
+    private CategoryData loadCategoryData() {
+        List<Category> allCategories = categoryService.list();
+        Map<Long, List<Category>> childrenMap = new HashMap<>();
         for (Category c : allCategories) {
             Long parentId = c.getParentId() != null ? c.getParentId() : 0L;
             childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(c);
@@ -164,12 +197,15 @@ public class ResourceImportServiceImpl implements ResourceImportService {
                 .map(Category::getName)
                 // 按名称长度降序排列，确保长名称（如"道德与法治"）优先匹配
                 .sorted((a, b) -> b.length() - a.length())
+                .map(Pattern::quote)
                 .collect(Collectors.joining("|"));
         if (!subjectRegex.isEmpty()) {
-            subjectPattern = Pattern.compile("(" + subjectRegex + ")");
+            Pattern subjectPattern = Pattern.compile("(" + subjectRegex + ")");
+            return new CategoryData(List.copyOf(allCategories), copyChildrenMap(childrenMap), subjectPattern);
         } else {
             // 保底：至少匹配空
-            subjectPattern = Pattern.compile("(.)", Pattern.LITERAL);
+            Pattern subjectPattern = Pattern.compile("(.)", Pattern.LITERAL);
+            return new CategoryData(List.copyOf(allCategories), copyChildrenMap(childrenMap), subjectPattern);
         }
     }
 
@@ -180,10 +216,10 @@ public class ResourceImportServiceImpl implements ResourceImportService {
      * 2. VERSION 类型规则 → 构建教材版本正则（取代硬编码的 VERSION_PATTERN）
      * 3. 加载标签 ID 缓存
      */
-    private void loadKeywordRules() {
+    private KeywordData loadKeywordRules() {
         // 1. 加载标签 ID 缓存
         List<Tag> tags = tagMapper.selectList(null);
-        tagNameIdCache = new HashMap<>();
+        Map<String, Long> tagNameIdCache = new HashMap<>();
         for (Tag tag : tags) {
             tagNameIdCache.put(tag.getName(), tag.getId());
         }
@@ -196,7 +232,7 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         );
 
         // 3. 构建标签关键词映射（type = 'TAG'）
-        tagKeywordMap = new LinkedHashMap<>();
+        Map<String, String> tagKeywordMap = new LinkedHashMap<>();
         // 收集 VERSION 规则的 target_name 去重，用最长的 keyword 作为匹配词
         Map<String, String> versionTargets = new LinkedHashMap<>();
 
@@ -218,17 +254,27 @@ public class ResourceImportServiceImpl implements ResourceImportService {
                     .sorted((a, b) -> b.length() - a.length())
                     .map(Pattern::quote)
                     .collect(Collectors.joining("|"));
-            versionPattern = Pattern.compile("(" + versionRegex + ")");
+            Pattern versionPattern = Pattern.compile("(" + versionRegex + ")");
+            return new KeywordData(
+                    Collections.unmodifiableMap(new LinkedHashMap<>(tagKeywordMap)),
+                    Collections.unmodifiableMap(new HashMap<>(tagNameIdCache)),
+                    versionPattern
+            );
         } else {
             // 保底：没有任何版本规则时，不匹配任何内容
-            versionPattern = Pattern.compile("(?!x)x");
+            Pattern versionPattern = Pattern.compile("(?!x)x");
+            return new KeywordData(
+                    Collections.unmodifiableMap(new LinkedHashMap<>(tagKeywordMap)),
+                    Collections.unmodifiableMap(new HashMap<>(tagNameIdCache)),
+                    versionPattern
+            );
         }
     }
 
     /**
      * 解析单个文本块
      */
-    private ParsedResourceVo parseBlock(String block) {
+    private ParsedResourceVo parseBlock(ParseContext context, String block) {
         String[] lines = block.split("\\n");
         String title = "";
         String link = "";
@@ -265,19 +311,19 @@ public class ResourceImportServiceImpl implements ResourceImportService {
             title = linkLine;
             Matcher m = LINK_PATTERN.matcher(title);
             if (m.find()) {
-                title = title.replace(link, "").replaceAll("[\\s　\\\\[\\]]+", "").trim();
+                title = title.replace(link, "").replaceAll("[\\s　\\\\\\[\\]]+", "").trim();
             }
         }
 
         if (title.isEmpty()) return null;
 
-        return parseTitle(title, link);
+        return parseTitle(context, title, link);
     }
 
     /**
      * 解析标题行
      */
-    private ParsedResourceVo parseTitle(String title, String link) {
+    private ParsedResourceVo parseTitle(ParseContext context, String title, String link) {
         ParsedResourceVo vo = new ParsedResourceVo();
         vo.setTitle(title);
         vo.setNetdiskLink(link.isEmpty() ? null : link);
@@ -289,13 +335,13 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         }
 
         // 提取教材版本（从 keyword_rule 表动态加载）
-        Matcher versionMatcher = versionPattern.matcher(title);
+        Matcher versionMatcher = context.keywordData.versionPattern.matcher(title);
         if (versionMatcher.find()) {
             vo.setTextbookVersion(versionMatcher.group(1));
         }
 
         // 提取科目（从 category 表动态构建）
-        Matcher subjectMatcher = subjectPattern.matcher(title);
+        Matcher subjectMatcher = context.categoryData.subjectPattern.matcher(title);
         String subject = "";
         if (subjectMatcher.find()) {
             subject = subjectMatcher.group(1);
@@ -308,10 +354,13 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         }
 
         // 匹配分类
-        matchCategory(vo, subject, gradeInfo);
+        matchCategory(context, vo, subject, gradeInfo);
+        if (vo.getCategoryId() == null && !Boolean.TRUE.equals(vo.getNeedManualCategory())) {
+            markManualCategory(vo, "未识别到可自动匹配的分类");
+        }
 
         // 自动检测标签
-        detectTags(vo, title);
+        detectTags(context, vo, title);
 
         return vo;
     }
@@ -319,30 +368,33 @@ public class ResourceImportServiceImpl implements ResourceImportService {
     /**
      * 根据科目和年级匹配分类
      */
-    private void matchCategory(ParsedResourceVo vo, String subject, GradeInfo gradeInfo) {
+    private void matchCategory(ParseContext context, ParsedResourceVo vo, String subject, GradeInfo gradeInfo) {
         String levelName = gradeInfo.levelName;
         String title = vo.getTitle();
 
         if (levelName == null) {
             // 无法通过学段判断，尝试试卷类资源匹配（如"高一全科试卷"→"高一试卷"）
             if (subject.isEmpty() && hasExamKeywords(title)) {
-                matchExamPaperCategory(vo, gradeInfo);
+                matchExamPaperCategory(context, vo, gradeInfo);
             }
             if (vo.getCategoryId() != null) return;
             // 未识别学段时，仅在科目分类唯一的情况下匹配，避免同名科目挂错学段。
             if (!subject.isEmpty()) {
-                matchUniqueSubjectCategory(vo, subject);
+                matchUniqueSubjectCategory(context, vo, subject);
+                if (vo.getCategoryId() == null) {
+                    markManualCategory(vo, "科目分类不唯一或未找到，无法自动判断学段");
+                }
             }
             return;
         }
 
         // 找到对应的顶层分类
-        List<Category> topList = childrenMap.getOrDefault(0L, Collections.emptyList());
+        List<Category> topList = context.categoryData.childrenMap.getOrDefault(0L, Collections.emptyList());
         for (Category top : topList) {
             if (top.getName().equals(levelName)) {
                 if (!subject.isEmpty()) {
                     // 在子分类中查找匹配的科目
-                    List<Category> children = childrenMap.getOrDefault(top.getId(), Collections.emptyList());
+                    List<Category> children = context.categoryData.childrenMap.getOrDefault(top.getId(), Collections.emptyList());
                     for (Category child : children) {
                         if (child.getName().equals(subject)) {
                             vo.setCategoryId(child.getId());
@@ -353,7 +405,7 @@ public class ResourceImportServiceImpl implements ResourceImportService {
                 }
                 // 无具体科目，尝试匹配试卷类资源（如"高一全科试卷"→"高一试卷"）
                 if (hasExamKeywords(title)) {
-                    matchExamPaperCategory(vo, gradeInfo);
+                    matchExamPaperCategory(context, vo, gradeInfo);
                     if (vo.getCategoryId() != null) return;
                 }
                 // 未匹配到子分类，使用顶层分类
@@ -367,7 +419,7 @@ public class ResourceImportServiceImpl implements ResourceImportService {
     /**
      * 匹配试卷类资源到对应的年级试卷分类（如"高一"→"高一试卷"）
      */
-    private void matchExamPaperCategory(ParsedResourceVo vo, GradeInfo gradeInfo) {
+    private void matchExamPaperCategory(ParseContext context, ParsedResourceVo vo, GradeInfo gradeInfo) {
         List<String> candidateNames = new ArrayList<>();
         if (gradeInfo.standaloneName != null) {
             candidateNames.add(gradeInfo.standaloneName + "试卷");
@@ -385,18 +437,18 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         }
 
         for (String examCatName : candidateNames) {
-            Category category = findCategoryByNameAndLevel(examCatName, gradeInfo.levelName);
+            Category category = findCategoryByNameAndLevel(context, examCatName, gradeInfo.levelName);
             if (category != null) {
-                assignCategory(vo, category);
+                assignCategory(context, vo, category);
                 vo.setSubject("全科");
                 return;
             }
         }
 
         if (gradeInfo.isRange() && gradeInfo.levelName != null) {
-            Category top = findTopCategoryByName(gradeInfo.levelName);
+            Category top = findTopCategoryByName(context, gradeInfo.levelName);
             if (top != null) {
-                assignCategory(vo, top);
+                assignCategory(context, vo, top);
                 vo.setSubject("全科");
             }
         }
@@ -414,11 +466,11 @@ public class ResourceImportServiceImpl implements ResourceImportService {
     /**
      * 根据标题关键词自动检测标签
      */
-    private void detectTags(ParsedResourceVo vo, String title) {
+    private void detectTags(ParseContext context, ParsedResourceVo vo, String title) {
         Set<Long> matchedIds = new LinkedHashSet<>();
-        for (Map.Entry<String, String> entry : tagKeywordMap.entrySet()) {
+        for (Map.Entry<String, String> entry : context.keywordData.tagKeywordMap.entrySet()) {
             if (title.contains(entry.getKey())) {
-                Long tagId = tagNameIdCache.get(entry.getValue());
+                Long tagId = context.keywordData.tagNameIdCache.get(entry.getValue());
                 if (tagId != null) {
                     matchedIds.add(tagId);
                 }
@@ -435,6 +487,7 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         for (ParsedResourceVo vo : resources) {
             // 跳过已存在的资源
             if (Boolean.TRUE.equals(vo.getAlreadyExists())) continue;
+            if (Boolean.FALSE.equals(vo.getParseSuccess())) continue;
             if (vo.getTitle() == null || vo.getTitle().trim().isEmpty()) continue;
             if (vo.getCategoryId() == null) continue;
 
@@ -466,8 +519,8 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         }
     }
 
-    private Category findCategoryById(Long id) {
-        for (Category c : allCategories) {
+    private Category findCategoryById(ParseContext context, Long id) {
+        for (Category c : context.categoryData.allCategories) {
             if (c.getId().equals(id)) return c;
         }
         return null;
@@ -571,28 +624,28 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         };
     }
 
-    private void matchUniqueSubjectCategory(ParsedResourceVo vo, String subject) {
-        List<Category> matches = allCategories.stream()
+    private void matchUniqueSubjectCategory(ParseContext context, ParsedResourceVo vo, String subject) {
+        List<Category> matches = context.categoryData.allCategories.stream()
                 .filter(c -> c.getName().equals(subject))
                 .filter(c -> c.getParentId() != null && c.getParentId() > 0)
                 .toList();
         if (matches.size() == 1) {
-            assignCategory(vo, matches.get(0));
+            assignCategory(context, vo, matches.get(0));
         }
     }
 
-    private Category findTopCategoryByName(String name) {
-        return childrenMap.getOrDefault(0L, Collections.emptyList()).stream()
+    private Category findTopCategoryByName(ParseContext context, String name) {
+        return context.categoryData.childrenMap.getOrDefault(0L, Collections.emptyList()).stream()
                 .filter(c -> c.getName().equals(name))
                 .findFirst()
                 .orElse(null);
     }
 
-    private Category findCategoryByNameAndLevel(String name, String levelName) {
-        for (Category c : allCategories) {
+    private Category findCategoryByNameAndLevel(ParseContext context, String name, String levelName) {
+        for (Category c : context.categoryData.allCategories) {
             if (!c.getName().equals(name)) continue;
             if (levelName == null) return c;
-            Category parent = findCategoryById(c.getParentId());
+            Category parent = findCategoryById(context, c.getParentId());
             if (parent != null && parent.getName().equals(levelName)) {
                 return c;
             }
@@ -600,10 +653,75 @@ public class ResourceImportServiceImpl implements ResourceImportService {
         return null;
     }
 
-    private void assignCategory(ParsedResourceVo vo, Category category) {
+    private void assignCategory(ParseContext context, ParsedResourceVo vo, Category category) {
         vo.setCategoryId(category.getId());
-        Category parent = findCategoryById(category.getParentId());
+        Category parent = findCategoryById(context, category.getParentId());
         vo.setCategoryName(parent != null ? parent.getName() + "/" + category.getName() : category.getName());
+        vo.setNeedManualCategory(false);
+        vo.setCategoryMatchMessage(null);
+    }
+
+    private void markManualCategory(ParsedResourceVo vo, String message) {
+        vo.setNeedManualCategory(true);
+        vo.setCategoryMatchMessage(message);
+    }
+
+    private ParsedResourceVo parseFailure(String block, RuntimeException ex) {
+        ParsedResourceVo vo = new ParsedResourceVo();
+        vo.setTitle(resolveFallbackTitle(block));
+        vo.setParseSuccess(false);
+        vo.setParseError(ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName());
+        return vo;
+    }
+
+    private String resolveFallbackTitle(String block) {
+        for (String line : block.split("\\n")) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                return trimmed;
+            }
+        }
+        return block;
+    }
+
+    private String abbreviate(String value) {
+        if (value == null) return "";
+        String normalized = value.replaceAll("\\s+", " ").trim();
+        return normalized.length() <= 120 ? normalized : normalized.substring(0, 120) + "...";
+    }
+
+    private static class ParseContext {
+        private final CategoryData categoryData;
+        private final KeywordData keywordData;
+
+        private ParseContext(CategoryData categoryData, KeywordData keywordData) {
+            this.categoryData = categoryData;
+            this.keywordData = keywordData;
+        }
+    }
+
+    private static class CategoryData {
+        private final List<Category> allCategories;
+        private final Map<Long, List<Category>> childrenMap;
+        private final Pattern subjectPattern;
+
+        private CategoryData(List<Category> allCategories, Map<Long, List<Category>> childrenMap, Pattern subjectPattern) {
+            this.allCategories = allCategories;
+            this.childrenMap = childrenMap;
+            this.subjectPattern = subjectPattern;
+        }
+    }
+
+    private static class KeywordData {
+        private final Map<String, String> tagKeywordMap;
+        private final Map<String, Long> tagNameIdCache;
+        private final Pattern versionPattern;
+
+        private KeywordData(Map<String, String> tagKeywordMap, Map<String, Long> tagNameIdCache, Pattern versionPattern) {
+            this.tagKeywordMap = tagKeywordMap;
+            this.tagNameIdCache = tagNameIdCache;
+            this.versionPattern = versionPattern;
+        }
     }
 
     private static class GradeInfo {

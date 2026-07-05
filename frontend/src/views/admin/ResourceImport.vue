@@ -109,6 +109,9 @@
                 :value="item.value"
               />
             </el-select>
+            <div v-if="row.parseError || row.categoryMatchMessage" class="match-message">
+              {{ row.parseError || row.categoryMatchMessage }}
+            </div>
           </template>
         </el-table-column>
 
@@ -380,5 +383,12 @@ async function handleBatchImport() {
 
 .exists-tag {
   flex-shrink: 0;
+}
+
+.match-message {
+  margin-top: 4px;
+  color: #e6a23c;
+  font-size: 12px;
+  line-height: 1.3;
 }
 </style>

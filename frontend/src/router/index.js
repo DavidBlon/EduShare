@@ -25,6 +25,12 @@ const routes = [
         meta: { title: '资源详情' }
       },
       {
+        path: 'qq-group',
+        name: 'QqGroup',
+        component: () => import('@/views/front/QqGroup.vue'),
+        meta: { title: '资料群' }
+      },
+      {
         path: 'about',
         name: 'About',
         component: () => import('@/views/front/About.vue'),
@@ -116,6 +122,12 @@ const routes = [
         name: 'Password',
         component: () => import('@/views/admin/Password.vue'),
         meta: { title: '修改密码', icon: 'Lock' }
+      },
+      {
+        path: 'qrcode',
+        name: 'QrCodeManage',
+        component: () => import('@/views/admin/QrCodeManage.vue'),
+        meta: { title: '资料群二维码', icon: 'Connection', roles: [0] }
       },
       {
         path: 'contact',

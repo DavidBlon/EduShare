@@ -38,4 +38,16 @@ public class ParsedResourceVo {
 
     /** 是否已存在于数据库中（根据网盘链接判断） */
     private Boolean alreadyExists;
+
+    /** 单条解析是否成功 */
+    private Boolean parseSuccess;
+
+    /** 单条解析失败原因 */
+    private String parseError;
+
+    /** 是否需要人工选择分类 */
+    private Boolean needManualCategory;
+
+    /** 分类匹配失败或不确定的原因 */
+    private String categoryMatchMessage;
 }

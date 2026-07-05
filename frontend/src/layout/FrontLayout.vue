@@ -14,6 +14,9 @@
           <router-link to="/resources" class="nav-item" :class="{ active: $route.path === '/resources' }">
             资源库
           </router-link>
+          <router-link to="/qq-group" class="nav-item" :class="{ active: $route.path === '/qq-group' }">
+            资料群
+          </router-link>
           <router-link to="/about" class="nav-item" :class="{ active: $route.path === '/about' }">
             关于我们
           </router-link>
@@ -104,6 +107,7 @@
             <h4>快速链接</h4>
             <router-link to="/">首页</router-link>
             <router-link to="/resources">资源库</router-link>
+            <router-link to="/qq-group">资料群</router-link>
             <router-link to="/about">关于我们</router-link>
             <router-link to="/announcements">平台公告</router-link>
           </div>
