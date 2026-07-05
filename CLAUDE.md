@@ -136,4 +136,8 @@ Join table `tag_resource(resource_id, tag_id)`. Custom `ResourceTagMapper.xml` w
 
 ## Deployment
 
-项目部署流程定义在 Skill 中。当用户说「部署」「上线」「重启」「推送服务器」「迭代」等关键词时，必须调用 Skill `edushare-deploy` 并按流程执行。
+当用户说「部署」「上线」「重启」「推送服务器」「迭代」时，必须调用 Skill `edushare-deploy` 并按流程执行。
+
+## Git Workflow
+
+当用户说「推送」「拉取」「提交」「Git」「同步代码」「上传代码」等关键词或涉及两端代码同步操作时，必须调用 Skill `edushare-git` 并按规范区分本地/服务器环境执行。
