@@ -25,6 +25,12 @@ const routes = [
         meta: { title: '资源详情' }
       },
       {
+        path: 'qq-group',
+        name: 'QqGroup',
+        component: () => import('@/views/front/QqGroup.vue'),
+        meta: { title: '资料群' }
+      },
+      {
         path: 'about',
         name: 'About',
         component: () => import('@/views/front/About.vue'),
