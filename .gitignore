@@ -35,8 +35,10 @@ build/
 # VS Code
 .vscode/
 
-# Claude
-.claude/
+# Claude (ignore everything except skills)
+.claude/*
+!.claude/skills/
+!.claude/skills/*
 
 # Nginx
 nginx-1.30.0/
