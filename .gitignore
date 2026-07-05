@@ -1,3 +1,4 @@
+
 # Maven
 target/
 .mvn/wrapper/maven-wrapper.jar
@@ -59,3 +60,65 @@ github key.txt
 # Runtime uploads
 upload/
 up/
+# Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.log
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# VS Code
+.vscode/
+
+# Claude (ignore everything except skills)
+.claude/*
+!.claude/skills/
+!.claude/skills/*
+
+# Nginx
+nginx-1.30.0/
+
+# Uploads
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config
+src/main/resources/application.properties
+
+# Keys / Secrets
+github key.txt
+
+# Runtime uploads
+upload/
+up/
+
