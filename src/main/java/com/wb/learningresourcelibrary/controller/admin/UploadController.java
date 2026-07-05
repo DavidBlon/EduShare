@@ -78,4 +78,52 @@ public class UploadController {
         result.put("fileName", originalFilename);
         return Result.success("上传成功", result);
     }
+
+    /**
+     * 微信群二维码上传（覆盖固定路径）
+     */
+    @PostMapping("/qrcode")
+    public Result<Map<String, String>> uploadQrCode(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            throw BusinessException.badRequest("请选择要上传的文件");
+        }
+
+        // 检查文件大小
+        if (file.getSize() > maxSize) {
+            throw BusinessException.badRequest("文件大小不能超过10MB");
+        }
+
+        // 检查文件类型
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.trim().isEmpty()) {
+            throw BusinessException.badRequest("文件名不能为空");
+        }
+        int dotIndex = originalFilename.lastIndexOf(".");
+        if (dotIndex < 0 || dotIndex == originalFilename.length() - 1) {
+            throw BusinessException.badRequest("文件格式不正确，仅支持 jpg/jpeg/png/gif/webp 格式的图片");
+        }
+        String suffix = originalFilename.substring(dotIndex).toLowerCase();
+        if (!suffix.matches("\\.(jpg|jpeg|png|gif|webp)$")) {
+            throw BusinessException.badRequest("仅支持 jpg/jpeg/png/gif/webp 格式的图片");
+        }
+
+        // 保存到固定路径，直接覆盖旧文件
+        String savePath = uploadPath + "/group-qrcode.png";
+        File dest = new File(savePath);
+        File parentDir = dest.getParentFile();
+        if (!parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+
+        try {
+            file.transferTo(dest);
+        } catch (IOException e) {
+            throw new RuntimeException("二维码上传失败", e);
+        }
+
+        Map<String, String> result = new HashMap<>();
+        result.put("url", "/uploads/group-qrcode.png");
+        result.put("fileName", "group-qrcode.png");
+        return Result.success("二维码更新成功", result);
+    }
 }

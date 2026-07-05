@@ -113,6 +113,10 @@
         <el-icon><Lock /></el-icon>
         <template #title>修改密码</template>
       </el-menu-item>
+      <el-menu-item v-if="isSuperAdmin" index="/admin/qrcode">
+        <el-icon><Connection /></el-icon>
+        <template #title>资料群二维码</template>
+      </el-menu-item>
       <el-menu-item v-if="isSuperAdmin" index="/admin/contact">
         <el-icon><Iphone /></el-icon>
         <template #title>联系方式</template>

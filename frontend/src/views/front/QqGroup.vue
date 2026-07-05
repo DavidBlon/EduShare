@@ -10,9 +10,9 @@
           </div>
           <div class="qr-image-wrapper">
             <el-image
-              src="/资料群二维码.png"
+              src="/uploads/group-qrcode.png"
               alt="微信群二维码"
-              :preview-src-list="['/资料群二维码.png']"
+              :preview-src-list="['/uploads/group-qrcode.png']"
               :initial-index="0"
               fit="contain"
               hide-on-click-modal

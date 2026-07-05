@@ -124,6 +124,12 @@ const routes = [
         meta: { title: '修改密码', icon: 'Lock' }
       },
       {
+        path: 'qrcode',
+        name: 'QrCodeManage',
+        component: () => import('@/views/admin/QrCodeManage.vue'),
+        meta: { title: '资料群二维码', icon: 'Connection', roles: [0] }
+      },
+      {
         path: 'contact',
         name: 'Contact',
         component: () => import('@/views/admin/Contact.vue'),
