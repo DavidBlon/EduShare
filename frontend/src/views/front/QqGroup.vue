@@ -10,9 +10,9 @@
           </div>
           <div class="qr-image-wrapper">
             <el-image
-              src="/uploads/group-qrcode.png"
+              :src="qrSrc"
               alt="微信群二维码"
-              :preview-src-list="['/uploads/group-qrcode.png']"
+              :preview-src-list="[qrSrc]"
               :initial-index="0"
               fit="contain"
               hide-on-click-modal
@@ -75,6 +75,7 @@
 import { ref } from 'vue'
 
 const qrLoaded = ref(false)
+const qrSrc = ref(`/uploads/group-qrcode.png?t=${Date.now()}`)
 
 function onQrLoad(e) {
   qrLoaded.value = true

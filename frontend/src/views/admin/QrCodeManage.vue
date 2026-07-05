@@ -76,7 +76,7 @@ import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { uploadQrCode } from '@/api/upload'
 
-const currentQrSrc = '/uploads/group-qrcode.png'
+const currentQrSrc = ref(`/uploads/group-qrcode.png?t=${Date.now()}`)
 const uploadRef = ref(null)
 const uploading = ref(false)
 const previewUrl = ref('')
@@ -123,6 +123,8 @@ async function handleUpload() {
     await uploadQrCode(selectedFile.value)
     ElMessage.success('二维码更新成功！前台页面已自动生效')
     handleClear()
+    // 刷新预览，加时间戳防止浏览器缓存旧图
+    currentQrSrc.value = `/uploads/group-qrcode.png?t=${Date.now()}`
   } catch {
     // handled by interceptor
   } finally {
