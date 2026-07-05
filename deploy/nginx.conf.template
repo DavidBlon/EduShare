@@ -51,6 +51,14 @@ http {
             add_header Cache-Control "public, no-transform";
         }
 
+        # 二维码图片单独处理，禁止浏览器缓存（每次上传后立即生效）
+        location = /uploads/group-qrcode.png {
+            alias ${UPLOADS_DIR}/group-qrcode.png;
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires 0;
+        }
+
         error_page   500 502 503 504  /50x.html;
         location = /50x.html {
             root   html;
