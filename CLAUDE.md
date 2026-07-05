@@ -133,3 +133,7 @@ Join table `tag_resource(resource_id, tag_id)`. Custom `ResourceTagMapper.xml` w
 - `@ActiveProfiles("test")` loads `src/test/resources/application-test.properties`
 - Separate JWT secret (`test-secret-key-...`) for test isolation
 - Upload path redirected to `target/test-uploads`
+
+## Deployment
+
+项目部署流程定义在 Skill 中。当用户说「部署」「上线」「重启」「推送服务器」「迭代」等关键词时，必须调用 Skill `edushare-deploy` 并按流程执行。
