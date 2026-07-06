@@ -347,6 +347,26 @@ onUnmounted(() => {
 })
 
 onActivated(() => {
+  // 每次激活时重新读取路由参数，覆盖缓存中的旧值
+  let changed = false
+  if (route.query.keyword && route.query.keyword !== query.keyword) {
+    query.keyword = route.query.keyword
+    changed = true
+  }
+  if (route.query.categoryId) {
+    const catId = Number(route.query.categoryId)
+    if (catId !== query.categoryId) { query.categoryId = catId; changed = true }
+  }
+  if (route.query.tagId) {
+    const tagId = Number(route.query.tagId)
+    if (tagId !== query.tagId) { query.tagId = tagId; changed = true }
+  }
+  if (changed) {
+    query.page = 1
+    loadResources()
+  }
+
+  // 恢复滚动位置
   if (scrollTop.value > 0) {
     window.scrollTo({ top: scrollTop.value, behavior: 'auto' })
   }
