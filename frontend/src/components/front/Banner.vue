@@ -448,6 +448,7 @@ function sparkleDelay(i) {
   background: linear-gradient(135deg, #337ecc, #409eff);
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .banner-search-btn:hover {
@@ -465,6 +466,12 @@ function sparkleDelay(i) {
 
 .btn-icon {
   font-size: 18px;
+}
+
+.banner-search-btn span,
+.banner-search-btn .btn-icon {
+  position: relative;
+  z-index: 1;
 }
 
 /* ====== Bottom Wave ====== */
