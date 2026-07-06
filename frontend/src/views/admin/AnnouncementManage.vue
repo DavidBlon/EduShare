@@ -2,8 +2,8 @@
   <div class="announcement-page">
     <div class="page-header">
       <div class="header-left">
-        <h2 class="page-title">公告管理</h2>
-        <span class="page-subtitle">发布和管理平台公告</span>
+        <h2>公告管理</h2>
+        <span class="header-desc">发布和管理平台公告</span>
       </div>
       <el-button type="primary" @click="openAddDialog">
         <el-icon><Plus /></el-icon> 发布公告
@@ -195,34 +195,18 @@ async function handleDelete(id) {
 </script>
 
 <style scoped>
-.announcement-page {
-  padding: 0;
-}
-
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20px;
 }
-
-.header-left {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.page-title {
+.page-header h2 {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+  margin: 0 0 4px;
 }
-
-.page-subtitle {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
+.header-desc { font-size:13px; color:var(--text-secondary); }
 
 .title-text {
   font-weight: 500;

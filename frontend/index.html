@@ -2,10 +2,40 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
   <title>小初学习资料圈 - 教育资源共享平台</title>
+  <meta name="description" content="小初学习资料圈，专注于小学、初中、高中教育资源分享，汇聚课件教案、同步练习、真题试卷、知识点总结等精品学习资料。" />
+  <meta name="keywords" content="小初学习资料圈,教育资源,网盘资源,小学教育,初中教育,高中教育,课件教案,真题试卷" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="小初学习资料圈 - 教育资源共享平台" />
+  <meta property="og:description" content="汇聚优质教育资源，助力每一位学习者" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/logo.jpg" />
+
+  <!-- Icons -->
   <link rel="icon" href="/logo.jpg" />
   <link rel="apple-touch-icon" href="/logo.jpg" />
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="http://localhost:8080" />
+
+  <!-- Font loading optimization -->
+  <style>
+    /* Prevent FOUC — hidden until app mounts */
+    #app:empty::after {
+      content: '加载中…';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #909399;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
   <div id="app"></div>

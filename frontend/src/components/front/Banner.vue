@@ -1,29 +1,86 @@
 <template>
-  <div class="banner" :style="{ background: `linear-gradient(135deg, ${bgStart}, ${bgEnd})` }">
+  <div class="banner">
+    <!-- Animated background gradient -->
+    <div class="banner-bg" :style="{ background: `linear-gradient(135deg, ${bgStart}, ${bgEnd})` }"></div>
+
+    <!-- Mesh grid texture overlay -->
+    <div class="mesh-grid"></div>
+
+    <!-- Animated gradient orbs -->
+    <div class="banner-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+      <div class="orb orb-4"></div>
+    </div>
+
+    <!-- Animated floating particles -->
+    <div class="banner-particles">
+      <div
+        v-for="i in 12"
+        :key="i"
+        :class="['particle', i % 3 === 0 ? 'particle-dot' : 'particle-circle']"
+        :style="{
+          width: particleSize(i) + 'px',
+          height: particleSize(i) + 'px',
+          left: particleLeft(i) + '%',
+          top: particleTop(i) + '%',
+          animationDelay: particleDelay(i) + 's',
+          animationDuration: (5 + i * 0.8) + 's',
+        }"
+      ></div>
+    </div>
+
+    <!-- Sparkle stars -->
+    <div class="sparkles">
+      <div
+        v-for="i in 6"
+        :key="'s' + i"
+        class="sparkle"
+        :style="{
+          left: sparkleLeft(i) + '%',
+          top: sparkleTop(i) + '%',
+          animationDelay: sparkleDelay(i) + 's',
+        }"
+      ></div>
+    </div>
+
     <div class="banner-content">
-      <h1 class="banner-title">{{ title }}</h1>
-      <p class="banner-subtitle">{{ subtitle }}</p>
+      <div class="banner-title-row">
+        <div class="title-logo">
+          <img src="/logo.jpg" alt="小初学习资料圈" class="logo-img" />
+        </div>
+        <h1 class="banner-title">{{ title }}</h1>
+      </div>
       <div class="banner-search" v-if="showSearch">
+        <div class="search-glow"></div>
         <el-input
           v-model="searchKeyword"
           placeholder="搜索你需要的教育资源..."
           size="large"
           clearable
+          class="banner-input"
           @keyup.enter="doSearch"
         >
           <template #prefix>
-            <el-icon><Search /></el-icon>
+            <el-icon class="search-prefix-icon"><Search /></el-icon>
           </template>
           <template #append>
-            <el-button @click="doSearch" style="border-radius:0 8px 8px 0;">搜索</el-button>
+            <el-button @click="doSearch" class="banner-search-btn">
+              <el-icon class="btn-icon"><Search /></el-icon>
+              <span>搜索</span>
+            </el-button>
           </template>
         </el-input>
       </div>
+
     </div>
-    <div class="banner-decoration">
-      <div class="circle c1"></div>
-      <div class="circle c2"></div>
-      <div class="circle c3"></div>
+
+    <!-- Bottom wave divider -->
+    <div class="banner-wave">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
+        <path d="M0,40 C360,80 720,0 1440,40 L1440,80 L0,80 Z" fill="var(--bg)"/>
+      </svg>
     </div>
   </div>
 </template>
@@ -33,11 +90,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({
-  title: { type: String, default: '小初学习资料圈 - 教育资源共享平台' },
-  subtitle: { type: String, default: '汇聚优质教育资源，助力每一位学习者' },
+  title: { type: String, default: '小初学习资料圈' },
   showSearch: { type: Boolean, default: true },
   bgStart: { type: String, default: '#1a1a2e' },
-  bgEnd: { type: String, default: '#16213e' }
+  bgEnd: { type: String, default: '#1e3a5f' }
 })
 
 const router = useRouter()
@@ -48,111 +104,435 @@ function doSearch() {
     router.push({ path: '/resources', query: { keyword: searchKeyword.value.trim() } })
   }
 }
+
+function particleSize(i) {
+  const sizes = [70, 35, 90, 45, 25, 65, 50, 40, 80, 30, 55, 20]
+  return sizes[i - 1]
+}
+function particleLeft(i) {
+  const positions = [8, 82, 55, 22, 72, 3, 92, 38, 15, 68, 48, 88]
+  return positions[i - 1]
+}
+function particleTop(i) {
+  const positions = [15, 12, 75, 35, 85, 55, 25, 68, 45, 8, 60, 90]
+  return positions[i - 1]
+}
+function particleDelay(i) {
+  return i * 0.8
+}
+
+function sparkleLeft(i) {
+  const positions = [15, 75, 35, 90, 52, 8]
+  return positions[i - 1]
+}
+function sparkleTop(i) {
+  const positions = [25, 18, 78, 48, 10, 65]
+  return positions[i - 1]
+}
+function sparkleDelay(i) {
+  return i * 1.5
+}
 </script>
 
 <style scoped>
+/* ====== Base ====== */
 .banner {
   position: relative;
   overflow: hidden;
-  padding: 80px 20px;
+  padding: 80px 24px 0;
   text-align: center;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.banner-content {
-  position: relative;
-  z-index: 1;
-  max-width: 700px;
-  margin: 0 auto;
+.banner-bg {
+  position: absolute;
+  inset: 0;
+  animation: bgShift 16s ease-in-out infinite alternate;
 }
 
-.banner-title {
-  font-size: 40px;
-  font-weight: 800;
-  color: white;
-  margin: 0 0 16px;
-  letter-spacing: 1px;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+@keyframes bgShift {
+  0%   { filter: hue-rotate(0deg) saturate(1); }
+  50%  { filter: hue-rotate(8deg) saturate(1.1); }
+  100% { filter: hue-rotate(-4deg) saturate(0.95); }
 }
 
-.banner-subtitle {
-  font-size: 18px;
-  color: rgba(255,255,255,0.75);
-  margin: 0 0 32px;
-  line-height: 1.6;
+/* ====== Mesh Grid ====== */
+.mesh-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
 }
 
-.banner-search {
-  max-width: 560px;
-  margin: 0 auto;
-}
-
-.banner-search :deep(.el-input__wrapper) {
-  border-radius: 8px 0 0 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-}
-
-.banner-search :deep(.el-button) {
-  height: 100%;
-  font-size: 15px;
-}
-
-/* Decoration circles */
-.banner-decoration {
+/* ====== Gradient Orbs ====== */
+.banner-orbs {
   position: absolute;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
 }
 
-.circle {
+.orb {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.06;
-  background: white;
+  filter: blur(100px);
+  opacity: 0.18;
+  animation: orbFloat 16s ease-in-out infinite alternate;
 }
 
-.c1 {
+.orb-1 {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, #409eff, transparent);
+  top: -250px;
+  right: -200px;
+  animation-delay: 0s;
+}
+
+.orb-2 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #1e90ff, transparent);
+  bottom: -250px;
+  left: -150px;
+  animation-delay: -5s;
+  opacity: 0.12;
+}
+
+.orb-3 {
   width: 400px;
   height: 400px;
-  top: -100px;
-  right: -100px;
+  background: radial-gradient(circle, #06b6d4, transparent);
+  top: 35%;
+  left: 55%;
+  animation-delay: -10s;
+  opacity: 0.1;
 }
 
-.c2 {
-  width: 300px;
-  height: 300px;
-  bottom: -80px;
-  left: -80px;
+.orb-4 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, #3b82f6, transparent);
+  top: 60%;
+  right: 25%;
+  animation-delay: -7s;
+  opacity: 0.08;
 }
 
-.c3 {
-  width: 200px;
-  height: 200px;
-  top: 50%;
-  left: 60%;
-  transform: translate(-50%, -50%);
+@keyframes orbFloat {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(50px, -40px) scale(1.15); }
+  66%  { transform: translate(-30px, 50px) scale(0.9); }
+  100% { transform: translate(40px, -30px) scale(1.08); }
 }
 
+/* ====== Particles ====== */
+.banner-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  animation: particleFloat 7s ease-in-out infinite alternate;
+}
+
+.particle-circle {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.particle-dot {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+}
+
+@keyframes particleFloat {
+  0%   { transform: translateY(0) scale(1); opacity: 0.2; }
+  50%  { transform: translateY(-40px) scale(1.3); opacity: 0.5; }
+  100% { transform: translateY(15px) scale(0.7); opacity: 0.15; }
+}
+
+/* ====== Sparkles ====== */
+.sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: white;
+  animation: sparkleAnim 3s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes sparkleAnim {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50%      { opacity: 0.7; transform: scale(1); }
+}
+
+/* ====== Content Area ====== */
+.banner-content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  margin: 0 auto;
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-bottom: 80px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ====== Title ====== */
+.banner-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.title-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(64, 158, 255, 0.15);
+}
+
+.title-logo .logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.banner-title {
+  font-size: 44px;
+  font-weight: 800;
+  color: white;
+  margin: 0;
+  letter-spacing: 2px;
+  line-height: 1.2;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ====== Search Box ====== */
+.banner-search {
+  max-width: 580px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Outer glow ring */
+.search-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 54px;
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.3), rgba(51, 126, 204, 0.3), rgba(64, 158, 255, 0.1));
+  filter: blur(12px);
+  opacity: 0.6;
+  animation: glowPulse 3s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes glowPulse {
+  0%   { opacity: 0.4; transform: scale(0.98); }
+  100% { opacity: 0.8; transform: scale(1.02); }
+}
+
+.banner-input {
+  position: relative;
+  z-index: 1;
+}
+
+.banner-input :deep(.el-input__wrapper) {
+  border-radius: 50px 0 0 50px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(12px);
+  padding-left: 24px !important;
+  height: 56px;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  transition: all 0.3s ease;
+}
+
+.banner-input :deep(.el-input__wrapper):hover {
+  background: rgba(255, 255, 255, 0.97) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.banner-input :deep(.el-input__wrapper.is-focus) {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(102, 126, 234, 0.5) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25), 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
+}
+
+.banner-input :deep(.el-input__inner) {
+  font-size: 16px;
+  height: 56px;
+  color: #1a1a2e;
+}
+
+.banner-input :deep(.el-input__inner)::placeholder {
+  color: rgba(26, 26, 46, 0.35);
+}
+
+/* Prefix icon */
+.search-prefix-icon {
+  color: rgba(26, 26, 46, 0.35);
+  font-size: 18px;
+}
+
+.banner-input :deep(.el-input-group__append) {
+  background: transparent;
+  border: none;
+  box-shadow: none !important;
+}
+
+.banner-input :deep(.el-input-group__prepend),
+.banner-input :deep(.el-input-group__append) {
+  box-shadow: none !important;
+}
+
+.banner-input :deep(.el-input-group) {
+  box-shadow: none;
+  border-radius: 50px;
+}
+
+/* Search Button */
+.banner-search-btn {
+  border-radius: 0 50px 50px 0 !important;
+  height: 56px !important;
+  padding: 0 32px !important;
+  font-size: 16px !important;
+  background: linear-gradient(135deg, #409eff, #337ecc) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-search-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #337ecc, #409eff);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.banner-search-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 24px rgba(64, 158, 255, 0.4);
+}
+
+.banner-search-btn:hover::before {
+  opacity: 1;
+}
+
+.banner-search-btn:active {
+  transform: scale(0.98);
+}
+
+.btn-icon {
+  font-size: 18px;
+}
+
+/* ====== Bottom Wave ====== */
+.banner-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.banner-wave svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ====== Responsive ====== */
 @media (max-width: 768px) {
-  .banner-title {
-    font-size: 24px;
-  }
-  .banner-subtitle {
-    font-size: 14px;
-    margin-bottom: 24px;
-  }
   .banner {
-    padding: 40px 16px;
+    padding: 50px 16px 0;
+    min-height: 280px;
   }
+
+  .banner-wave {
+    height: 40px;
+  }
+
+  .banner-title-row {
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .title-logo {
+    width: 44px;
+    height: 44px;
+  }
+
+  .banner-title {
+    font-size: 26px;
+  }
+
+  .banner-input :deep(.el-input__wrapper) {
+    border-radius: 50px !important;
+    height: 48px;
+  }
+
+  .banner-input :deep(.el-input__inner) {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .banner-input :deep(.el-input-group__append) {
+    display: none;
+  }
+
   .banner-search {
     max-width: 100%;
   }
-  .banner-search :deep(.el-input__wrapper) {
-    border-radius: 8px;
+
+  .search-glow {
+    display: none;
   }
-  .banner-search :deep(.el-button) {
-    font-size: 14px;
-    padding: 8px 14px;
+
+  .mesh-grid {
+    background-size: 24px 24px;
   }
 }
 </style>

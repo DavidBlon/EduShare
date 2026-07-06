@@ -1,102 +1,114 @@
 <template>
   <div class="resource-list-page">
-    <div class="page-container main-section" style="padding-top:40px;">
+    <div class="page-container main-section">
       <div class="layout-wrapper">
         <!-- Mobile filter toggle -->
         <div class="mobile-filter-bar">
-          <el-button @click="showFilter = !showFilter" :type="showFilter ? 'primary' : 'default'" style="width:100%;">
+          <el-button
+            @click="showFilter = !showFilter"
+            :type="showFilter ? 'primary' : 'default'"
+            class="filter-toggle-btn"
+          >
             <el-icon><Filter /></el-icon>
             {{ showFilter ? '收起筛选' : '展开筛选' }}
           </el-button>
         </div>
 
         <!-- Sidebar Filters -->
-        <aside class="filter-sidebar" :class="{ 'filter-visible': showFilter }">
-          <el-card shadow="never">
-            <template #header>
-              <span class="filter-title"><el-icon><Filter /></el-icon> 筛选条件</span>
-            </template>
+        <transition name="slide-fade">
+          <aside v-if="!mobile || showFilter" class="filter-sidebar" :class="{ 'filter-mobile': mobile }">
+            <el-card shadow="never" class="filter-card-custom">
+              <template #header>
+                <span class="filter-title">
+                  <el-icon><Filter /></el-icon>
+                  筛选条件
+                </span>
+              </template>
 
-            <div class="filter-group">
-              <h4>分类</h4>
-              <div class="category-tree">
-                <div v-for="cat in categories" :key="cat.id" class="cat-item">
-                  <!-- 父级大类 -->
+              <div class="filter-group">
+                <h4>分类</h4>
+                <div class="category-tree">
                   <div
-                    class="cat-parent"
-                    :class="{ active: query.categoryId === cat.id }"
-                    @click="selectCategory(cat.id)"
+                    class="cat-all"
+                    :class="{ active: !query.categoryId }"
+                    @click="selectCategory(null)"
                   >
-                    <span
-                      class="cat-toggle"
-                      v-if="cat.children && cat.children.length"
-                      @click.stop="toggleParent(cat.id)"
-                    >
-                      <el-icon :class="{ rotated: isExpanded(cat.id) }">
-                        <CaretRight />
-                      </el-icon>
-                    </span>
-                    <span class="cat-name">{{ cat.name }}</span>
+                    全部分类
                   </div>
-                  <!-- 子级科目 -->
-                  <div class="cat-children" v-if="cat.children && cat.children.length && isExpanded(cat.id)">
+                  <div v-for="cat in categories" :key="cat.id" class="cat-item">
+                    <!-- Parent -->
                     <div
-                      v-for="child in cat.children"
-                      :key="child.id"
-                      class="cat-child-label"
-                      :class="{ active: query.categoryId === child.id }"
-                      @click="selectCategory(child.id)"
+                      class="cat-parent"
+                      :class="{ active: query.categoryId === cat.id }"
+                      @click="selectCategory(cat.id)"
                     >
-                      {{ child.name }}
+                      <span
+                        class="cat-toggle"
+                        v-if="cat.children && cat.children.length"
+                        @click.stop="toggleParent(cat.id)"
+                      >
+                        <el-icon :class="{ rotated: isExpanded(cat.id) }">
+                          <CaretRight />
+                        </el-icon>
+                      </span>
+                      <span class="cat-name">{{ cat.name }}</span>
+                      <span class="cat-count" v-if="cat.children">{{ cat.children.length }}</span>
                     </div>
+                    <!-- Children -->
+                    <transition name="fade">
+                      <div class="cat-children" v-if="cat.children && cat.children.length && isExpanded(cat.id)">
+                        <div
+                          v-for="child in cat.children"
+                          :key="child.id"
+                          class="cat-child-label"
+                          :class="{ active: query.categoryId === child.id }"
+                          @click="selectCategory(child.id)"
+                        >
+                          {{ child.name }}
+                        </div>
+                      </div>
+                    </transition>
                   </div>
                 </div>
-                <div
-                  class="cat-label cat-all"
-                  :class="{ active: !query.categoryId }"
-                  @click="selectCategory(null)"
-                >
-                  全部分类
+              </div>
+
+              <el-divider class="filter-divider" />
+
+              <div class="filter-group">
+                <h4>标签</h4>
+                <div class="tag-list">
+                  <el-tag
+                    v-for="tag in tags"
+                    :key="tag.id"
+                    :type="query.tagId === tag.id ? 'primary' : 'info'"
+                    :effect="query.tagId === tag.id ? 'dark' : 'plain'"
+                    class="tag-item"
+                    @click="selectTag(tag.id)"
+                  >
+                    {{ tag.name }}
+                  </el-tag>
+                  <div v-if="!tags.length" class="no-items">暂无标签</div>
                 </div>
               </div>
-            </div>
 
-            <el-divider />
+              <el-divider class="filter-divider" />
 
-            <div class="filter-group">
-              <h4>标签</h4>
-              <div class="tag-list">
-                <el-tag
-                  v-for="tag in tags"
-                  :key="tag.id"
-                  :type="query.tagId === tag.id ? 'primary' : 'info'"
-                  effect="plain"
-                  class="tag-item"
-                  @click="selectTag(tag.id)"
-                >
-                  {{ tag.name }}
-                </el-tag>
-                <div v-if="!tags.length" class="no-items">暂无标签</div>
+              <div class="filter-group">
+                <h4>排序</h4>
+                <el-radio-group v-model="query.sortBy" @change="doSearch" class="sort-group">
+                  <el-radio-button value="">默认</el-radio-button>
+                  <el-radio-button value="new">最新</el-radio-button>
+                  <el-radio-button value="hot">热门</el-radio-button>
+                  <el-radio-button value="recommend">推荐</el-radio-button>
+                </el-radio-group>
               </div>
-            </div>
 
-            <el-divider />
-
-            <div class="filter-group">
-              <h4>排序</h4>
-              <el-radio-group v-model="query.sortBy" @change="doSearch">
-                <el-radio-button value="">默认</el-radio-button>
-                <el-radio-button value="new">最新</el-radio-button>
-                <el-radio-button value="hot">热门</el-radio-button>
-                <el-radio-button value="recommend">推荐</el-radio-button>
-              </el-radio-group>
-            </div>
-
-            <el-button @click="resetFilters" class="reset-btn" style="width:100%;margin-top:12px;">
-              重置筛选
-            </el-button>
-          </el-card>
-        </aside>
+              <el-button @click="resetFilters" class="reset-btn" :icon="Refresh">
+                重置筛选
+              </el-button>
+            </el-card>
+          </aside>
+        </transition>
 
         <!-- Main List -->
         <section class="resource-list">
@@ -106,7 +118,7 @@
               v-model="query.keyword"
               placeholder="搜索资源标题或简介..."
               clearable
-              style="width:360px;"
+              class="search-input"
               @keyup.enter="doSearch"
               @clear="doSearch"
             >
@@ -114,7 +126,50 @@
                 <el-icon><Search /></el-icon>
               </template>
             </el-input>
-            <el-button type="primary" @click="doSearch">搜索</el-button>
+            <el-button type="primary" @click="doSearch" class="search-btn">
+              <el-icon><Search /></el-icon>
+              <span>搜索</span>
+            </el-button>
+          </div>
+
+          <!-- Active Filters -->
+          <div class="active-filters" v-if="query.categoryId || query.tagId || query.keyword || query.sortBy">
+            <span class="active-label">当前筛选：</span>
+            <el-tag
+              v-if="query.keyword"
+              closable
+              @close="query.keyword = ''; doSearch()"
+              effect="plain"
+            >
+              关键词：{{ query.keyword }}
+            </el-tag>
+            <el-tag
+              v-if="query.categoryId"
+              closable
+              @close="query.categoryId = null; doSearch()"
+              type="success"
+              effect="plain"
+            >
+              {{ getCategoryName(query.categoryId) }}
+            </el-tag>
+            <el-tag
+              v-if="query.tagId"
+              closable
+              @close="query.tagId = null; doSearch()"
+              type="warning"
+              effect="plain"
+            >
+              {{ getTagName(query.tagId) }}
+            </el-tag>
+            <el-tag
+              v-if="query.sortBy"
+              closable
+              @close="query.sortBy = ''; doSearch()"
+              type="info"
+              effect="plain"
+            >
+              {{ sortLabels[query.sortBy] }}
+            </el-tag>
           </div>
 
           <!-- Stats -->
@@ -124,18 +179,20 @@
 
           <!-- Loading -->
           <div v-if="loading" class="loading-area">
-            <el-skeleton :count="6" animated>
-              <template #template>
-                <div style="display:flex;gap:16px;padding:16px;margin-bottom:12px;background:white;border-radius:8px;">
-                  <el-skeleton-item variant="image" style="width:160px;height:120px" />
-                  <div style="flex:1">
-                    <el-skeleton-item variant="h3" style="width:50%;margin-bottom:12px" />
-                    <el-skeleton-item variant="text" style="width:80%;margin-bottom:8px" />
-                    <el-skeleton-item variant="text" style="width:40%" />
+            <div v-for="i in 4" :key="i" class="skeleton-item">
+              <el-skeleton animated>
+                <template #template>
+                  <div class="skeleton-row">
+                    <el-skeleton-item variant="image" class="skeleton-cover" />
+                    <div class="skeleton-info">
+                      <el-skeleton-item variant="h3" style="width: 50%; margin-bottom: 12px" />
+                      <el-skeleton-item variant="text" style="width: 80%; margin-bottom: 8px" />
+                      <el-skeleton-item variant="text" style="width: 30%" />
+                    </div>
                   </div>
-                </div>
-              </template>
-            </el-skeleton>
+                </template>
+              </el-skeleton>
+            </div>
           </div>
 
           <!-- Empty -->
@@ -144,10 +201,11 @@
           <!-- List -->
           <div v-else class="resource-items">
             <router-link
-              v-for="item in resources"
+              v-for="(item, idx) in resources"
               :key="item.id"
               :to="`/resource/${item.id}`"
               class="resource-item"
+              :style="{ animationDelay: idx * 0.06 + 's' }"
             >
               <div class="item-cover">
                 <img
@@ -163,7 +221,9 @@
                 <h3 class="item-title">{{ item.title }}</h3>
                 <p class="item-desc" v-if="item.description">{{ item.description }}</p>
                 <div class="item-meta">
-                  <el-tag v-if="item.categoryName" size="small" effect="plain">{{ item.categoryName }}</el-tag>
+                  <el-tag v-if="item.categoryName" size="small" effect="plain" class="item-category">
+                    {{ item.categoryName }}
+                  </el-tag>
                   <span class="item-stats">
                     <el-icon><View /></el-icon> {{ item.viewCount || 0 }}
                     <el-icon style="margin-left:12px;"><Download /></el-icon> {{ item.downloadCount || 0 }}
@@ -171,11 +231,18 @@
                   <span class="item-date">{{ formatDate(item.createdAt) }}</span>
                 </div>
                 <div class="item-tags" v-if="item.tags && item.tags.length">
-                  <el-tag v-for="tag in item.tags.slice(0, 4)" :key="tag.id" size="small" type="success" effect="plain">
+                  <el-tag
+                    v-for="tag in item.tags.slice(0, 4)"
+                    :key="tag.id"
+                    size="small"
+                    type="success"
+                    effect="plain"
+                  >
                     {{ tag.name }}
                   </el-tag>
                 </div>
               </div>
+              <el-icon class="item-arrow"><ArrowRight /></el-icon>
             </router-link>
           </div>
 
@@ -201,8 +268,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, onActivated, onDeactivated, defineOptions } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, onActivated, onDeactivated, defineOptions, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Refresh } from '@element-plus/icons-vue'
 import { searchResources } from '@/api/resource'
 import { getCategoryTree } from '@/api/category'
 import { getTagList } from '@/api/tag'
@@ -222,8 +290,9 @@ const loading = ref(false)
 const showFilter = ref(false)
 const mobile = ref(false)
 
-// 控制各大类（小学/初中/高中/中考/高考）下面科目的展开状态
 const expandedParents = ref(new Set())
+
+const sortLabels = { new: '最新', hot: '热门', recommend: '推荐' }
 
 const query = reactive({
   page: 1,
@@ -234,6 +303,22 @@ const query = reactive({
   sortBy: ''
 })
 
+function getCategoryName(id) {
+  for (const cat of categories.value) {
+    if (cat.id === id) return cat.name
+    if (cat.children) {
+      const child = cat.children.find(c => c.id === id)
+      if (child) return child.name
+    }
+  }
+  return '分类#' + id
+}
+
+function getTagName(id) {
+  const tag = tags.value.find(t => t.id === id)
+  return tag ? tag.name : '标签#' + id
+}
+
 function checkMobile() {
   mobile.value = window.innerWidth < 768
 }
@@ -242,12 +327,11 @@ onMounted(async () => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
 
-  // Read query params from URL
+  // Read query params
   if (route.query.keyword) query.keyword = route.query.keyword
   if (route.query.categoryId) query.categoryId = Number(route.query.categoryId)
   if (route.query.tagId) query.tagId = Number(route.query.tagId)
 
-  // Load filters
   const [catRes, tagRes] = await Promise.all([
     getCategoryTree(),
     getTagList()
@@ -255,7 +339,6 @@ onMounted(async () => {
   categories.value = catRes.data || []
   tags.value = tagRes.data || []
 
-  // Load resources
   loadResources()
 })
 
@@ -263,25 +346,20 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
 
-// keep-alive: 从详情页返回时恢复滚动位置
 onActivated(() => {
   if (scrollTop.value > 0) {
     window.scrollTo({ top: scrollTop.value, behavior: 'auto' })
   }
 })
 
-// keep-alive: 离开时保存滚动位置
 onDeactivated(() => {
   scrollTop.value = window.scrollY
 })
 
 function toggleParent(id) {
   const set = new Set(expandedParents.value)
-  if (set.has(id)) {
-    set.delete(id)
-  } else {
-    set.add(id)
-  }
+  if (set.has(id)) set.delete(id)
+  else set.add(id)
   expandedParents.value = set
 }
 
@@ -350,7 +428,7 @@ function formatDate(date) {
   align-items: flex-start;
 }
 
-/* Sidebar */
+/* ====== Sidebar ====== */
 .filter-sidebar {
   width: 260px;
   flex-shrink: 0;
@@ -358,31 +436,66 @@ function formatDate(date) {
   top: calc(var(--header-height) + 30px);
 }
 
+.filter-card-custom {
+  background: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.filter-card-custom :deep(.el-card__body) {
+  padding: 16px 20px 20px;
+}
+
 .filter-title {
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 15px;
 }
 
 .filter-group {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .filter-group h4 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-divider {
+  margin: 14px 0;
 }
 
 .category-tree {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
-/* 父级大类行 */
+.cat-all {
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-regular);
+  transition: var(--transition);
+  margin-bottom: 2px;
+}
+.cat-all:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+.cat-all.active {
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-weight: 600;
+}
+
 .cat-parent {
   display: flex;
   align-items: center;
@@ -397,28 +510,26 @@ function formatDate(date) {
   user-select: none;
 }
 .cat-parent:hover {
-  background: rgba(64, 158, 255, 0.08);
+  background: var(--primary-bg);
   color: var(--primary);
 }
 .cat-parent.active {
-  background: rgba(64, 158, 255, 0.1);
+  background: var(--primary-bg);
   color: var(--primary);
 }
 
-/* 展开/收起的箭头 */
 .cat-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   font-size: 12px;
   color: var(--text-secondary);
-  transition: var(--transition);
 }
 .cat-toggle .el-icon {
-  transition: transform 0.25s ease;
+  transition: transform 0.2s ease;
 }
 .cat-toggle .el-icon.rotated {
   transform: rotate(90deg);
@@ -428,7 +539,15 @@ function formatDate(date) {
   flex: 1;
 }
 
-/* 子级科目 */
+.cat-count {
+  font-size: 11px;
+  color: var(--text-placeholder);
+  background: var(--bg);
+  padding: 0 6px;
+  border-radius: 8px;
+  line-height: 18px;
+}
+
 .cat-child-label {
   padding: 6px 10px 6px 32px;
   border-radius: 6px;
@@ -438,11 +557,11 @@ function formatDate(date) {
   transition: var(--transition);
 }
 .cat-child-label:hover {
-  background: rgba(64, 158, 255, 0.08);
+  background: var(--primary-bg);
   color: var(--primary);
 }
 .cat-child-label.active {
-  background: rgba(64, 158, 255, 0.1);
+  background: var(--primary-bg);
   color: var(--primary);
   font-weight: 600;
 }
@@ -451,56 +570,86 @@ function formatDate(date) {
   margin-bottom: 2px;
 }
 
-.cat-all {
-  margin-top: 4px;
-}
-
-.cat-label,
-.cat-all {
-  padding: 7px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--text-regular);
-  transition: var(--transition);
-}
-.cat-label:hover,
-.cat-all:hover {
-  background: rgba(64, 158, 255, 0.08);
-  color: var(--primary);
-}
-.cat-label.active,
-.cat-all.active {
-  background: rgba(64, 158, 255, 0.1);
-  color: var(--primary);
-  font-weight: 600;
-}
-
+/* Tags */
 .tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-
 .tag-item {
   cursor: pointer;
+  transition: var(--transition);
 }
-
+.tag-item:hover {
+  transform: translateY(-1px);
+}
 .no-items {
   font-size: 13px;
   color: var(--text-secondary);
 }
 
-/* Main list */
+/* Sort group */
+.sort-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.sort-group :deep(.el-radio-button__inner) {
+  border-radius: 6px !important;
+  padding: 6px 14px;
+  border: 1px solid var(--border) !important;
+  font-size: 13px;
+}
+
+.reset-btn {
+  width: 100%;
+  margin-top: 16px;
+  border-radius: 8px;
+}
+
+/* ====== Main List ====== */
 .resource-list {
   flex: 1;
   min-width: 0;
 }
 
+/* Search */
 .search-bar {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+
+.search-input {
+  flex: 1;
+}
+.search-input :deep(.el-input__wrapper) {
+  border-radius: 8px;
+  height: 42px;
+}
+
+.search-btn {
+  border-radius: 8px;
+  height: 42px;
+  padding: 0 20px;
+}
+
+/* Active filters */
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+.active-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .list-stats {
@@ -509,6 +658,7 @@ function formatDate(date) {
   margin-bottom: 16px;
 }
 
+/* ====== List Items ====== */
 .resource-items {
   display: flex;
   flex-direction: column;
@@ -516,19 +666,35 @@ function formatDate(date) {
 }
 
 .resource-item {
+  position: relative;
   display: flex;
   gap: 20px;
   background: white;
   border-radius: var(--radius-lg);
   padding: 16px;
   box-shadow: var(--shadow);
-  transition: var(--transition);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease;
   text-decoration: none;
   color: inherit;
+  animation: listItemIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  overflow: hidden;
 }
 .resource-item:hover {
   box-shadow: var(--shadow-hover);
   transform: translateY(-2px);
+}
+
+@keyframes listItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .item-cover {
@@ -543,20 +709,16 @@ function formatDate(date) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s, opacity 0.5s ease, filter 0.5s ease;
+  transition: transform 0.3s ease, opacity 0.5s ease, filter 0.5s ease;
 }
-
-/* Blur-up lazy loading */
 .item-cover img.blur-load {
   filter: blur(16px);
   opacity: 0.4;
 }
-
 .item-cover img.blur-load.loaded {
   filter: blur(0);
   opacity: 1;
 }
-
 .resource-item:hover .item-cover img {
   transform: scale(1.05);
 }
@@ -571,6 +733,10 @@ function formatDate(date) {
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 8px;
+  transition: color 0.2s;
+}
+.resource-item:hover .item-title {
+  color: var(--primary);
 }
 
 .item-desc {
@@ -602,6 +768,7 @@ function formatDate(date) {
 
 .item-date {
   margin-left: auto;
+  font-size: 12px;
 }
 
 .item-tags {
@@ -610,10 +777,55 @@ function formatDate(date) {
   gap: 4px;
 }
 
+.item-arrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-placeholder);
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.resource-item:hover .item-arrow {
+  opacity: 1;
+  transform: translateY(-50%) translateX(4px);
+}
+
+/* Pagination */
 .pagination-wrapper {
   display: flex;
   justify-content: center;
   margin-top: 30px;
+}
+
+/* ====== Skeleton ====== */
+.skeleton-item {
+  margin-bottom: 12px;
+}
+.skeleton-row {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+}
+.skeleton-cover {
+  width: 180px;
+  height: 130px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.skeleton-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ====== Mobile ====== */
+.mobile-filter-bar {
+  display: none;
 }
 
 @media (max-width: 768px) {
@@ -621,22 +833,24 @@ function formatDate(date) {
     flex-direction: column;
   }
   .mobile-filter-bar {
-    display: block !important;
+    display: block;
     margin-bottom: 12px;
+  }
+  .filter-toggle-btn {
+    width: 100%;
   }
   .filter-sidebar {
     width: 100%;
     position: static;
-    display: none;
   }
-  .filter-sidebar.filter-visible {
+  .filter-sidebar.filter-mobile {
     display: block;
   }
   .search-bar {
     flex-direction: column;
   }
-  .search-bar .el-input {
-    width: 100% !important;
+  .search-btn span {
+    display: inline;
   }
   .item-cover {
     width: 100px;
@@ -659,6 +873,9 @@ function formatDate(date) {
     gap: 8px;
     font-size: 12px;
   }
+  .item-arrow {
+    display: none;
+  }
   .main-section {
     padding-top: 20px !important;
   }
@@ -670,9 +887,5 @@ function formatDate(date) {
   .pagination-wrapper :deep(.el-pagination) {
     white-space: nowrap;
   }
-}
-
-.mobile-filter-bar {
-  display: none;
 }
 </style>

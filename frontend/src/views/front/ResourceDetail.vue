@@ -2,7 +2,7 @@
   <div class="detail-page">
     <div class="page-container">
       <!-- Loading -->
-      <div v-if="loading" class="loading-area" style="padding:80px 0;text-align:center;">
+      <div v-if="loading" class="loading-area">
         <el-skeleton :rows="8" animated />
       </div>
 
@@ -13,12 +13,19 @@
 
       <!-- Content -->
       <template v-else-if="resource">
-        <!-- Breadcrumb -->
-        <el-breadcrumb separator="/" class="detail-breadcrumb">
-          <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item :to="{ path: '/resources' }">资源库</el-breadcrumb-item>
-          <el-breadcrumb-item>{{ resource.title }}</el-breadcrumb-item>
-        </el-breadcrumb>
+        <div class="detail-top">
+          <!-- Breadcrumb -->
+          <el-breadcrumb separator="/" class="detail-breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/resources' }">资源库</el-breadcrumb-item>
+            <el-breadcrumb-item>{{ resource.title }}</el-breadcrumb-item>
+          </el-breadcrumb>
+
+          <!-- Back button -->
+          <el-button text class="back-btn" @click="$router.back()">
+            <el-icon><ArrowLeft /></el-icon> 返回
+          </el-button>
+        </div>
 
         <div class="detail-wrapper">
           <!-- Main Info -->
@@ -27,7 +34,9 @@
               <h1 class="detail-title">{{ resource.title }}</h1>
               <div class="detail-meta">
                 <span v-if="resource.categoryName">
-                  <el-tag effect="plain">{{ resource.categoryName }}</el-tag>
+                  <el-tag effect="plain" color="#e8f4ff" class="detail-cat-tag">
+                    {{ resource.categoryName }}
+                  </el-tag>
                 </span>
                 <span class="meta-stat">
                   <el-icon><View /></el-icon> {{ resource.viewCount || 0 }} 次浏览
@@ -35,7 +44,9 @@
                 <span class="meta-stat">
                   <el-icon><Download /></el-icon> {{ resource.downloadCount || 0 }} 次下载
                 </span>
-                <span class="meta-date">{{ formatDate(resource.createdAt) }}</span>
+                <span class="meta-date">
+                  <el-icon><Clock /></el-icon> {{ formatDate(resource.createdAt) }}
+                </span>
               </div>
             </div>
 
@@ -47,7 +58,7 @@
                 fit="contain"
                 lazy
                 :preview-src-list="[resource.cover]"
-                style="max-height:400px;width:100%;"
+                class="detail-image"
               />
             </div>
 
@@ -59,6 +70,7 @@
                 :key="tag.id"
                 type="success"
                 effect="plain"
+                class="detail-tag"
               >
                 {{ tag.name }}
               </el-tag>
@@ -73,10 +85,11 @@
 
           <!-- Sidebar -->
           <aside class="detail-sidebar">
-            <el-card shadow="never">
-              <template #header>
-                <span class="sidebar-title"><el-icon><Link /></el-icon> 网盘信息</span>
-              </template>
+            <el-card shadow="never" class="sidebar-card">
+              <div class="sidebar-card-header">
+                <el-icon><Link /></el-icon>
+                <span>网盘信息</span>
+              </div>
 
               <div class="netdisk-card">
                 <div class="netdisk-field" v-if="netdiskInfo.netdiskLink">
@@ -87,38 +100,59 @@
                   <label>提取码</label>
                   <div class="field-value code-value">
                     <span class="code-text">{{ showCode ? netdiskInfo.netdiskCode : '****' }}</span>
-                    <el-button text type="primary" @click="showCode = !showCode">
+                    <el-button
+                      text
+                      type="primary"
+                      size="small"
+                      @click="showCode = !showCode"
+                      class="toggle-code"
+                    >
                       {{ showCode ? '隐藏' : '显示' }}
                     </el-button>
                   </div>
                 </div>
 
-                <el-divider />
+                <el-divider class="netdisk-divider" />
 
                 <div class="netdisk-actions">
-                  <el-button
-                    type="primary"
-                    size="large"
-                    class="copy-btn"
-                    @click="getNetdisk"
-                    :loading="netdiskLoading"
-                    :disabled="!!netdiskInfo.netdiskLink"
-                  >
-                    <el-icon><Link /></el-icon>
-                    {{ netdiskInfo.netdiskLink ? '复制网盘链接' : '查看网盘信息' }}
-                  </el-button>
-                  <p class="netdisk-tip" v-if="!netdiskInfo.netdiskLink">
-                    点击查看网盘链接和提取码
-                  </p>
-                  <div v-else class="copy-actions">
-                    <el-button @click="copyLink" :class="{ copied: linkCopied }">
+                  <template v-if="!netdiskInfo.netdiskLink">
+                    <el-button
+                      type="primary"
+                      size="large"
+                      class="action-btn primary-btn"
+                      @click="getNetdisk"
+                      :loading="netdiskLoading"
+                    >
+                      <el-icon><Link /></el-icon>
+                      查看网盘信息
+                    </el-button>
+                    <p class="netdisk-tip">点击查看网盘链接和提取码</p>
+                  </template>
+
+                  <template v-else>
+                    <el-button type="primary" size="large" class="action-btn primary-btn" @click="copyLink">
+                      <el-icon><CopyDocument /></el-icon>
                       {{ linkCopied ? '已复制' : '复制链接' }}
                     </el-button>
-                    <el-button @click="copyCode" :class="{ copied: codeCopied }">
+                    <el-button size="large" class="action-btn" @click="copyCode">
+                      <el-icon><CopyDocument /></el-icon>
                       {{ codeCopied ? '已复制' : '复制提取码' }}
                     </el-button>
-                  </div>
+                  </template>
                 </div>
+              </div>
+            </el-card>
+
+            <!-- Share -->
+            <el-card shadow="never" class="sidebar-card share-card">
+              <div class="sidebar-card-header">
+                <el-icon><Share /></el-icon>
+                <span>分享</span>
+              </div>
+              <div class="share-actions">
+                <el-button text @click="copyCurrentUrl">
+                  <el-icon><Link /></el-icon> 复制链接
+                </el-button>
               </div>
             </el-card>
           </aside>
@@ -129,7 +163,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getResourceDetail, getNetdiskInfo } from '@/api/resource'
 import { ElMessage } from 'element-plus'
@@ -161,7 +195,7 @@ onMounted(async () => {
     if (!res.data) {
       error.value = '资源不存在或已删除'
     }
-  } catch (e) {
+  } catch {
     error.value = '获取资源详情失败'
   } finally {
     loading.value = false
@@ -169,13 +203,13 @@ onMounted(async () => {
 })
 
 async function getNetdisk() {
-  if (netdiskInfo.netdiskLink) return // Already loaded
+  if (netdiskInfo.netdiskLink) return
   netdiskLoading.value = true
   try {
     const res = await getNetdiskInfo(route.params.id)
     netdiskInfo.netdiskLink = res.data.netdiskLink
     netdiskInfo.netdiskCode = res.data.netdiskCode
-    // Refresh detail to update download count
+    // Refresh to update download count
     const detailRes = await getResourceDetail(route.params.id)
     resource.value = detailRes.data
     ElMessage.success('网盘信息已获取')
@@ -186,13 +220,10 @@ async function getNetdisk() {
   }
 }
 
-// 兼容 HTTP 环境的剪贴板写入（navigator.clipboard 需要 HTTPS）
 function copyToClipboard(text) {
-  // 优先使用 Clipboard API（HTTPS 环境）
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(text)
   }
-  // 降级方案：textarea + execCommand（兼容 HTTP）
   return new Promise((resolve, reject) => {
     const textarea = document.createElement('textarea')
     textarea.value = text
@@ -201,9 +232,7 @@ function copyToClipboard(text) {
     document.body.appendChild(textarea)
     textarea.select()
     try {
-      const successful = document.execCommand('copy')
-      if (successful) resolve()
-      else reject(new Error('execCommand copy failed'))
+      document.execCommand('copy') ? resolve() : reject(new Error('copy failed'))
     } catch (e) {
       reject(e)
     } finally {
@@ -216,7 +245,7 @@ async function copyLink() {
   try {
     await copyToClipboard(netdiskInfo.netdiskLink)
     linkCopied.value = true
-    ElMessage.success('链接已复制到剪贴板')
+    ElMessage.success('链接已复制')
     setTimeout(() => { linkCopied.value = false }, 2000)
   } catch {
     ElMessage.error('复制失败，请手动复制')
@@ -227,10 +256,19 @@ async function copyCode() {
   try {
     await copyToClipboard(netdiskInfo.netdiskCode)
     codeCopied.value = true
-    ElMessage.success('提取码已复制到剪贴板')
+    ElMessage.success('提取码已复制')
     setTimeout(() => { codeCopied.value = false }, 2000)
   } catch {
     ElMessage.error('复制失败，请手动复制')
+  }
+}
+
+async function copyCurrentUrl() {
+  try {
+    await copyToClipboard(window.location.href)
+    ElMessage.success('链接已复制到剪贴板')
+  } catch {
+    ElMessage.error('复制失败')
   }
 }
 
@@ -245,19 +283,36 @@ function formatDate(date) {
   padding: 30px 0;
 }
 
-.detail-breadcrumb {
+.detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
+}
+
+.detail-breadcrumb {
+  font-size: 14px;
+}
+
+.back-btn {
+  font-size: 14px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.back-btn:hover {
+  color: var(--primary);
 }
 
 .detail-wrapper {
   display: flex;
-  gap: 24px;
+  gap: 28px;
   align-items: flex-start;
 }
 
 .detail-main {
   flex: 1;
   min-width: 0;
+  animation: fadeInUp 0.5s ease;
 }
 
 .detail-header {
@@ -268,8 +323,8 @@ function formatDate(date) {
   font-size: 28px;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 12px;
-  line-height: 1.4;
+  margin: 0 0 14px;
+  line-height: 1.35;
 }
 
 .detail-meta {
@@ -281,7 +336,18 @@ function formatDate(date) {
   flex-wrap: wrap;
 }
 
+.detail-cat-tag :deep(.el-tag__content) {
+  color: var(--primary);
+  font-weight: 500;
+}
+
 .meta-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-date {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -295,6 +361,13 @@ function formatDate(date) {
   display: flex;
   justify-content: center;
   padding: 20px;
+  border: 1px solid var(--border-light);
+}
+
+.detail-image {
+  max-height: 400px;
+  width: 100%;
+  border-radius: 8px;
 }
 
 .detail-tags {
@@ -310,10 +383,17 @@ function formatDate(date) {
   color: var(--text-secondary);
 }
 
+.detail-tag {
+  transition: var(--transition);
+}
+.detail-tag:hover {
+  transform: translateY(-1px);
+}
+
 .detail-desc {
   background: white;
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 28px;
   box-shadow: var(--shadow);
 }
 
@@ -322,8 +402,18 @@ function formatDate(date) {
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 16px;
-  padding-bottom: 12px;
+  padding-bottom: 14px;
   border-bottom: 2px solid var(--bg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.detail-desc h3::before {
+  content: '';
+  width: 3px;
+  height: 18px;
+  background: var(--primary-gradient);
+  border-radius: 2px;
 }
 
 .desc-content {
@@ -333,19 +423,40 @@ function formatDate(date) {
   white-space: pre-wrap;
 }
 
-/* Sidebar */
+/* ====== Sidebar ====== */
 .detail-sidebar {
   width: 340px;
   flex-shrink: 0;
   position: sticky;
   top: calc(var(--header-height) + 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeInUp 0.5s ease 0.1s both;
 }
 
-.sidebar-title {
-  font-weight: 600;
+.sidebar-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.sidebar-card :deep(.el-card__body) {
+  padding: 0;
+}
+
+.sidebar-card-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-primary);
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-light);
+  background: linear-gradient(135deg, #f7f8fa, #f0f2f5);
+}
+
+.netdisk-card {
+  padding: 20px;
 }
 
 .netdisk-field {
@@ -357,6 +468,7 @@ function formatDate(date) {
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 6px;
+  font-weight: 500;
 }
 
 .field-value {
@@ -370,6 +482,7 @@ function formatDate(date) {
   background: var(--bg);
   border-radius: 6px;
   font-size: 13px;
+  line-height: 1.6;
 }
 
 .code-value {
@@ -379,42 +492,59 @@ function formatDate(date) {
 }
 
 .code-text {
-  font-size: 20px;
-  letter-spacing: 4px;
+  font-size: 22px;
+  letter-spacing: 5px;
   font-weight: 700;
   color: var(--primary);
+  font-family: 'Courier New', monospace;
+}
+
+.toggle-code {
+  flex-shrink: 0;
+}
+
+.netdisk-divider {
+  margin: 16px 0;
 }
 
 .netdisk-actions {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.copy-btn {
+.action-btn {
   width: 100%;
-  font-size: 16px;
-  padding: 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  justify-content: center;
+}
+
+.primary-btn {
+  padding: 14px;
+  font-weight: 600;
 }
 
 .netdisk-tip {
   font-size: 12px;
-  color: var(--text-secondary);
-  margin: 8px 0 0;
+  color: var(--text-placeholder);
+  margin: 0;
+  text-align: center;
 }
 
-.copy-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
+/* Share card */
+.share-card .share-actions {
+  padding: 16px 20px;
+}
+.share-actions .el-button {
+  width: 100%;
+  justify-content: flex-start;
+  font-size: 14px;
 }
 
-.copy-actions .el-button {
-  flex: 1;
-}
-
-.copy-actions .copied {
-  background: #67c23a;
-  color: white;
-  border-color: #67c23a;
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 768px) {
@@ -429,27 +559,25 @@ function formatDate(date) {
     position: static;
   }
   .detail-title {
-    font-size: 20px;
-    line-height: 1.3;
+    font-size: 22px;
   }
   .detail-meta {
     font-size: 13px;
     gap: 10px;
   }
   .detail-desc {
-    padding: 16px;
+    padding: 20px;
+  }
+  .detail-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
   .detail-breadcrumb {
-    margin-bottom: 16px;
     font-size: 13px;
   }
-  .netdisk-actions .copy-btn {
-    font-size: 14px;
+  .detail-cover {
     padding: 12px;
-  }
-  .copy-actions {
-    flex-direction: column;
-    gap: 8px;
   }
 }
 </style>

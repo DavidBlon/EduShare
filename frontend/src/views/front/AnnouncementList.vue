@@ -1,15 +1,13 @@
 <template>
   <div class="announcement-page">
-    <div class="page-container" style="padding-top: 40px;">
-      <!-- Breadcrumb -->
-      <div class="breadcrumb">
-        <router-link to="/">首页</router-link>
-        <el-icon><ArrowRight /></el-icon>
-        <span>平台公告</span>
+    <div class="page-hero">
+      <div class="page-container">
+        <h1 class="hero-title">平台公告</h1>
+        <p class="hero-desc">了解平台最新动态与通知</p>
       </div>
+    </div>
 
-      <h1 class="page-title">平台公告</h1>
-
+    <div class="page-container">
       <!-- Loading -->
       <div v-if="loading" class="loading-wrap">
         <el-skeleton :rows="5" animated />
@@ -23,20 +21,30 @@
       <!-- Announcement List -->
       <div v-else class="announcement-list">
         <div
-          v-for="item in list"
+          v-for="(item, idx) in list"
           :key="item.id"
           class="announcement-card"
+          :style="{ animationDelay: idx * 0.06 + 's' }"
           @click="$router.push(`/announcement/${item.id}`)"
         >
-          <div class="card-header">
+          <div class="card-badge">
+            <el-tag size="small" type="info" effect="dark" class="type-tag">公告</el-tag>
+          </div>
+          <div class="card-body">
             <h3 class="card-title">{{ item.title }}</h3>
-            <el-tag size="small" type="info" effect="plain">{{ item.adminName }}</el-tag>
+            <p class="card-desc">{{ truncateContent(item.content) }}</p>
+            <div class="card-footer">
+              <span class="footer-author">
+                <el-icon><User /></el-icon>
+                {{ item.adminName || '管理员' }}
+              </span>
+              <span class="footer-time">
+                <el-icon><Clock /></el-icon>
+                {{ item.createdAt }}
+              </span>
+            </div>
           </div>
-          <p class="card-desc">{{ truncateContent(item.content) }}</p>
-          <div class="card-footer">
-            <el-icon><Clock /></el-icon>
-            <span>{{ item.createdAt }}</span>
-          </div>
+          <el-icon class="card-arrow"><ArrowRight /></el-icon>
         </div>
       </div>
 
@@ -65,9 +73,7 @@ const loading = ref(true)
 const page = ref(1)
 const pageSize = ref(10)
 
-onMounted(() => {
-  fetchList()
-})
+onMounted(() => fetchList())
 
 async function fetchList() {
   loading.value = true
@@ -75,45 +81,38 @@ async function fetchList() {
     const res = await getPublishedAnnouncementPage({ page: page.value, pageSize: pageSize.value })
     list.value = res.data?.records || []
     total.value = res.data?.total || 0
-  } catch {
-    // handled by interceptor
-  } finally {
-    loading.value = false
-  }
+  } catch { /* noop */ }
+  finally { loading.value = false }
 }
 
 function truncateContent(content) {
   if (!content) return ''
-  return content.length > 150 ? content.slice(0, 150) + '...' : content
+  return content.length > 150 ? content.slice(0, 150) + '…' : content
 }
 </script>
 
 <style scoped>
 .announcement-page {
   min-height: 60vh;
+  padding-bottom: 60px;
 }
 
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-}
-.breadcrumb a {
-  color: var(--text-secondary);
-  text-decoration: none;
-}
-.breadcrumb a:hover {
-  color: var(--primary);
+.page-hero {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  padding: 64px 0 48px;
+  text-align: center;
 }
 
-.page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 32px;
+.hero-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 8px;
+}
+.hero-desc {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
 }
 
 .loading-wrap {
@@ -121,6 +120,7 @@ function truncateContent(content) {
   border-radius: var(--radius-lg);
   padding: 32px;
   box-shadow: var(--shadow);
+  margin-top: 32px;
 }
 
 .empty-wrap {
@@ -128,49 +128,72 @@ function truncateContent(content) {
   border-radius: var(--radius-lg);
   padding: 60px 20px;
   box-shadow: var(--shadow);
+  margin-top: 32px;
 }
 
 .announcement-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin-top: 32px;
 }
 
 .announcement-card {
+  position: relative;
+  display: flex;
   background: white;
   border-radius: var(--radius-lg);
   padding: 24px;
   box-shadow: var(--shadow);
   cursor: pointer;
-  transition: var(--transition);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease;
+  animation: cardIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  gap: 20px;
+  overflow: hidden;
 }
 .announcement-card:hover {
   box-shadow: var(--shadow-hover);
   transform: translateY(-2px);
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-badge {
+  flex-shrink: 0;
+}
+
+.type-tag {
+  border-radius: 4px;
+}
+
+.card-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .card-title {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0;
-  flex: 1;
+  margin: 0 0 10px;
+  transition: color 0.2s;
+}
+.announcement-card:hover .card-title {
+  color: var(--primary);
 }
 
 .card-desc {
   font-size: 14px;
   color: var(--text-regular);
   line-height: 1.6;
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -178,28 +201,42 @@ function truncateContent(content) {
 .card-footer {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 20px;
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+.footer-author,
+.footer-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-arrow {
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--text-placeholder);
+  font-size: 16px;
+  transition: var(--transition);
+}
+.announcement-card:hover .card-arrow {
+  color: var(--primary);
+  transform: translateX(4px);
 }
 
 .pagination-wrap {
   display: flex;
   justify-content: center;
   margin-top: 32px;
-  padding-bottom: 40px;
 }
 
 @media (max-width: 768px) {
-  .page-title {
-    font-size: 22px;
-    margin-bottom: 20px;
-  }
-  .announcement-card {
-    padding: 16px;
-  }
-  .card-title {
-    font-size: 16px;
-  }
+  .hero-title { font-size: 28px; }
+  .page-hero { padding: 48px 0 36px; }
+  .announcement-list { margin-top: 20px; }
+  .announcement-card { padding: 16px; }
+  .card-title { font-size: 16px; }
+  .card-arrow { display: none; }
 }
 </style>

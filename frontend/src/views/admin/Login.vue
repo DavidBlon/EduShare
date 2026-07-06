@@ -1,5 +1,28 @@
 <template>
   <div class="login-page">
+    <!-- Animated background orbs -->
+    <div class="bg-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Floating particles -->
+    <div class="bg-particles">
+      <div
+        v-for="i in 6"
+        :key="i"
+        class="particle"
+        :style="{
+          width: (20 + i * 10) + 'px',
+          height: (20 + i * 10) + 'px',
+          left: (5 + i * 16) + '%',
+          animationDelay: (i * 0.7) + 's',
+          animationDuration: (6 + i) + 's',
+        }"
+      ></div>
+    </div>
+
     <div class="login-card">
       <div class="login-header">
         <div class="login-logo">
@@ -7,8 +30,8 @@
             <img src="/logo.jpg" alt="小初学习资料圈" />
           </div>
         </div>
-        <h2 class="login-title">小初学习资料圈 管理后台</h2>
-        <p class="login-subtitle">教育资源共享平台</p>
+        <h2 class="login-title">小初学习资料圈</h2>
+        <p class="login-subtitle">管理后台 · 教育资源共享平台</p>
       </div>
 
       <el-form
@@ -16,12 +39,13 @@
         :model="form"
         :rules="rules"
         size="large"
+        class="login-form"
         @keyup.enter="handleLogin"
       >
         <el-form-item prop="username">
           <el-input
             v-model="form.username"
-            placeholder="请输入用户名"
+            placeholder="用户名"
             :prefix-icon="User"
           />
         </el-form-item>
@@ -30,7 +54,7 @@
           <el-input
             v-model="form.password"
             type="password"
-            placeholder="请输入密码"
+            placeholder="密码"
             :prefix-icon="Lock"
             show-password
           />
@@ -40,7 +64,7 @@
           <el-button
             type="primary"
             :loading="loading"
-            style="width:100%;"
+            class="login-btn"
             @click="handleLogin"
           >
             {{ loading ? '登录中...' : '登 录' }}
@@ -49,7 +73,9 @@
       </el-form>
 
       <div class="login-footer">
-        <router-link to="/">返回前台</router-link>
+        <router-link to="/" class="back-link">
+          <el-icon><ArrowLeft /></el-icon> 返回前台
+        </router-link>
       </div>
     </div>
   </div>
@@ -86,7 +112,6 @@ async function handleLogin() {
     const res = await login({ username: form.username, password: form.password })
     const data = res.data
     localStorage.setItem('adminToken', data.token)
-    // 后端返回的管理员信息直接在 data 层，没有嵌套 admin 对象
     localStorage.setItem('adminInfo', JSON.stringify({
       id: data.adminId,
       username: data.username,
@@ -106,72 +131,135 @@ async function handleLogin() {
 
 <style scoped>
 .login-page {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 40%, #16213e 70%, #0f3460 100%);
   position: relative;
   overflow: hidden;
 }
 
-.login-page::before {
-  content: '';
+/* ====== Animated Orbs ====== */
+.bg-orbs {
   position: absolute;
-  width: 600px;
-  height: 600px;
+  inset: 0;
+  pointer-events: none;
+}
+
+.orb {
+  position: absolute;
   border-radius: 50%;
-  background: rgba(64, 158, 255, 0.03);
+  filter: blur(100px);
+  opacity: 0.12;
+  animation: orbFloat 15s ease-in-out infinite alternate;
+}
+
+.orb-1 {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, #409eff, transparent);
   top: -200px;
   right: -200px;
+  animation-delay: 0s;
 }
 
-.login-page::after {
-  content: '';
-  position: absolute;
+.orb-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #7c3aed, transparent);
+  bottom: -150px;
+  left: -150px;
+  animation-delay: -5s;
+}
+
+.orb-3 {
   width: 400px;
   height: 400px;
-  border-radius: 50%;
-  background: rgba(64, 158, 255, 0.03);
-  bottom: -100px;
-  left: -100px;
+  background: radial-gradient(circle, #06b6d4, transparent);
+  top: 50%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  animation-delay: -10s;
 }
 
+@keyframes orbFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.1); }
+  66% { transform: translate(-20px, 30px) scale(0.9); }
+  100% { transform: translate(20px, -10px) scale(1.05); }
+}
+
+/* ====== Particles ====== */
+.bg-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  bottom: 10%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  animation: particleRise 8s ease-in-out infinite alternate;
+}
+
+@keyframes particleRise {
+  0% { transform: translateY(0) scale(1); opacity: 0.2; }
+  100% { transform: translateY(-40px) scale(1.3); opacity: 0.5; }
+}
+
+/* ====== Login Card ====== */
 .login-card {
   position: relative;
   z-index: 1;
   width: 420px;
-  padding: 40px;
+  padding: 44px;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  animation: cardEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .login-logo {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .login-logo-circle {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 8px 24px rgba(64, 158, 255, 0.2);
 }
 .login-logo-circle img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   object-fit: cover;
-  transform: scale(1.12);
 }
 
 .login-title {
@@ -179,6 +267,7 @@ async function handleLogin() {
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 6px;
+  letter-spacing: 0.5px;
 }
 
 .login-subtitle {
@@ -187,20 +276,73 @@ async function handleLogin() {
   margin: 0;
 }
 
+/* ====== Form ====== */
+.login-form {
+  margin-bottom: 8px;
+}
+
+.login-form :deep(.el-input__wrapper) {
+  border-radius: 10px;
+  padding: 4px 16px;
+  box-shadow: 0 0 0 1px var(--border) inset !important;
+  transition: all 0.25s ease;
+}
+.login-form :deep(.el-input__wrapper):hover {
+  box-shadow: 0 0 0 1px var(--border-darker) inset !important;
+}
+.login-form :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) inset !important;
+  border-color: var(--primary);
+}
+
+.login-form :deep(.el-form-item) {
+  margin-bottom: 22px;
+}
+
+.login-btn {
+  width: 100%;
+  height: 46px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  border-radius: 10px;
+  margin-top: 4px;
+  transition: var(--transition);
+}
+.login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+}
+
+/* ====== Footer ====== */
 .login-footer {
   text-align: center;
-  margin-top: 16px;
+}
+
+.back-link {
+  color: var(--text-secondary);
   font-size: 13px;
-}
-
-.login-footer a {
-  color: var(--primary);
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: var(--transition);
+}
+.back-link:hover {
+  color: var(--primary);
 }
 
-.default-account {
-  display: block;
-  color: var(--text-placeholder);
-  margin-top: 8px;
+@media (max-width: 768px) {
+  .login-card {
+    width: 92%;
+    padding: 32px 24px;
+  }
+  .login-title {
+    font-size: 20px;
+  }
+  .login-logo-circle {
+    width: 60px;
+    height: 60px;
+  }
 }
 </style>
