@@ -61,6 +61,7 @@
           clearable
           class="banner-input"
           autocomplete="off"
+          name="search-input-home"
           @keyup.enter="doSearch"
         >
           <template #prefix>
@@ -101,7 +102,8 @@ const router = useRouter()
 const searchKeyword = ref('')
 
 onMounted(() => {
-  searchKeyword.value = ''
+  // 延迟清空，确保覆盖浏览器自动填充
+  setTimeout(() => { searchKeyword.value = '' }, 200)
 })
 
 function doSearch() {
