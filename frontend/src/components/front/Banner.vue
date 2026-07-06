@@ -60,6 +60,7 @@
           size="large"
           clearable
           class="banner-input"
+          autocomplete="off"
           @keyup.enter="doSearch"
         >
           <template #prefix>
@@ -86,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({
@@ -98,6 +99,10 @@ const props = defineProps({
 
 const router = useRouter()
 const searchKeyword = ref('')
+
+onMounted(() => {
+  searchKeyword.value = ''
+})
 
 function doSearch() {
   if (searchKeyword.value.trim()) {
