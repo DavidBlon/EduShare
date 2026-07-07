@@ -51,6 +51,21 @@
           </div>
         </div>
       </section>
+
+      <!-- ====== 免责声明（从 API 动态获取） ====== -->
+      <section v-if="!disclaimerLoading && disclaimer" id="disclaimer" class="about-section disclaimer-section">
+        <h2>免责声明及侵权处理</h2>
+
+        <div v-for="(section, index) in disclaimerSections" :key="index" class="disclaimer-item">
+          <h3>{{ section.title }}</h3>
+          <p v-html="section.content"></p>
+        </div>
+
+        <div class="disclaimer-contact">
+          <el-icon><Message /></el-icon>
+          <span>📧 侵权投诉/联系邮箱：<a :href="'mailto:' + disclaimer.contactEmail" class="disclaimer-email">{{ disclaimer.contactEmail || '请填写联系邮箱' }}</a></span>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -58,6 +73,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getPublicContact } from '@/api/contact'
+import { getPublicDisclaimer } from '@/api/disclaimer'
 
 const contact = ref({
   email: '',
@@ -75,6 +91,21 @@ const hasContact = computed(() =>
   (contact.value.showAddress === 1 && contact.value.address)
 )
 
+// ====== 免责声明 ======
+const disclaimer = ref(null)
+const disclaimerLoading = ref(true)
+
+const disclaimerSections = computed(() => {
+  if (!disclaimer.value) return []
+  return [
+    { title: disclaimer.value.section1Title, content: disclaimer.value.section1Content },
+    { title: disclaimer.value.section2Title, content: disclaimer.value.section2Content },
+    { title: disclaimer.value.section3Title, content: disclaimer.value.section3Content },
+    { title: disclaimer.value.section4Title, content: disclaimer.value.section4Content },
+    { title: disclaimer.value.section5Title, content: disclaimer.value.section5Content }
+  ]
+})
+
 onMounted(async () => {
   try {
     const res = await getPublicContact()
@@ -85,6 +116,15 @@ onMounted(async () => {
     // 使用默认值
   } finally {
     contactLoading.value = false
+  }
+
+  try {
+    const res = await getPublicDisclaimer()
+    disclaimer.value = res.data
+  } catch {
+    // 使用默认值
+  } finally {
+    disclaimerLoading.value = false
   }
 })
 
@@ -184,6 +224,52 @@ const scopeItems = [
   padding: 12px 16px;
   background: var(--bg);
   border-radius: 8px;
+}
+
+/* ====== 免责声明 ====== */
+.disclaimer-section {
+  border-left: 4px solid var(--primary);
+}
+
+.disclaimer-item {
+  margin-bottom: 20px;
+}
+.disclaimer-item:last-of-type {
+  margin-bottom: 24px;
+}
+
+.disclaimer-item h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.disclaimer-item p {
+  font-size: 14px;
+  color: var(--text-regular);
+  line-height: 1.8;
+  margin: 0;
+}
+
+.disclaimer-contact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: var(--primary-bg);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-regular);
+}
+
+.disclaimer-email {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+.disclaimer-email:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

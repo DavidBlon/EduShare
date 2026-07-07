@@ -134,6 +134,12 @@ const routes = [
         name: 'Contact',
         component: () => import('@/views/admin/Contact.vue'),
         meta: { title: '联系方式', icon: 'Iphone', roles: [0] }
+      },
+      {
+        path: 'disclaimer',
+        name: 'DisclaimerManage',
+        component: () => import('@/views/admin/DisclaimerManage.vue'),
+        meta: { title: '免责声明', icon: 'WarningFilled', roles: [0] }
       }
     ]
   }
@@ -146,6 +152,12 @@ const router = createRouter({
     // keep-alive 缓存的页面（如 ResourceList）由组件内部的 onActivated 恢复滚动
     if (savedPosition) {
       return savedPosition
+    }
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth'
+      }
     }
     return { top: 0 }
   }

@@ -148,6 +148,7 @@
             <router-link to="/qq-group">资料群</router-link>
             <router-link to="/about">关于我们</router-link>
             <router-link to="/announcements">平台公告</router-link>
+            <router-link to="/about#disclaimer">免责声明及侵权处理</router-link>
           </div>
           <div v-if="hasFooterContact" class="footer-contact">
             <h4>联系我们</h4>
@@ -164,6 +165,7 @@
         </div>
         <div class="footer-bottom">
           <p>&copy; 2024-2025 小初学习资料圈. All rights reserved.</p>
+          <p class="footer-disclaimer">{{ briefDisclaimer || '本站资源仅供个人学习交流，请于下载后24小时内删除。如有侵权，请联系我们处理。' }}</p>
         </div>
       </div>
     </footer>
@@ -174,6 +176,7 @@
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getPublicContact } from '@/api/contact'
+import { getPublicDisclaimer } from '@/api/disclaimer'
 import { getUnreadCount, getRecentAnnouncements } from '@/api/announcement'
 
 const router = useRouter()
@@ -237,6 +240,9 @@ const unreadCount = ref(0)
 const recentList = ref([])
 const lastReadId = ref(0)
 
+// ====== Footer disclaimer ======
+const briefDisclaimer = ref('')
+
 function loadLastReadId() {
   try {
     const val = localStorage.getItem('frontAnnouncementLastReadId')
@@ -284,6 +290,11 @@ onMounted(async () => {
   try {
     const res = await getPublicContact()
     if (res.data) footerContact.value = res.data
+  } catch { /* use defaults */ }
+
+  try {
+    const res = await getPublicDisclaimer()
+    if (res.data) briefDisclaimer.value = res.data.briefDisclaimer || ''
   } catch { /* use defaults */ }
 })
 
@@ -737,6 +748,16 @@ function goAdmin() {
   text-align: center;
   font-size: 13px;
   color: #6a6f88;
+}
+.footer-bottom p {
+  margin: 0;
+}
+.footer-bottom p + p {
+  margin-top: 6px;
+}
+.footer-disclaimer {
+  font-size: 12px;
+  color: #555a75;
 }
 
 /* ========== Responsive ========== */

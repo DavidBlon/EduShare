@@ -44,3 +44,13 @@ export function getContact() {
 export function updateContact(data) {
   return request.put('/api/admin/contact', data)
 }
+
+// 获取免责声明
+export function getDisclaimer() {
+  return request.get('/api/admin/disclaimer')
+}
+
+// 更新免责声明
+export function updateDisclaimer(data) {
+  return request.put('/api/admin/disclaimer', data)
+}

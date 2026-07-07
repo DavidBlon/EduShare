@@ -130,6 +130,10 @@
         <el-icon><Iphone /></el-icon>
         <template #title>联系方式</template>
       </el-menu-item>
+      <el-menu-item v-if="isSuperAdmin" index="/admin/disclaimer">
+        <el-icon><WarningFilled /></el-icon>
+        <template #title>免责声明</template>
+      </el-menu-item>
       <el-menu-item index="/" onclick="window.open('/','_blank')">
         <el-icon><View /></el-icon>
         <template #title>返回前台</template>
@@ -166,6 +170,9 @@
                 </el-dropdown-item>
                 <el-dropdown-item v-if="isSuperAdmin" command="contact">
                   <el-icon><Iphone /></el-icon> 联系方式
+                </el-dropdown-item>
+                <el-dropdown-item v-if="isSuperAdmin" command="disclaimer">
+                  <el-icon><WarningFilled /></el-icon> 免责声明
                 </el-dropdown-item>
                 <el-dropdown-item command="home">
                   <el-icon><View /></el-icon> 返回前台
@@ -276,6 +283,7 @@ function handleCommand(command) {
     }).catch(() => {})
   } else if (command === 'password') router.push('/admin/password')
   else if (command === 'contact') router.push('/admin/contact')
+  else if (command === 'disclaimer') router.push('/admin/disclaimer')
   else if (command === 'home') window.open('/', '_blank')
 }
 </script>
