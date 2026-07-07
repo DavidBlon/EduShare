@@ -4,23 +4,23 @@
       <div class="layout-wrapper">
         <!-- Mobile filter toggle -->
         <div class="mobile-filter-bar">
-          <el-button
+          <n-button
             @click="showFilter = !showFilter"
             :type="showFilter ? 'primary' : 'default'"
             class="filter-toggle-btn"
           >
-            <el-icon><Filter /></el-icon>
+            <template #icon><n-icon><FunnelOutline /></n-icon></template>
             {{ showFilter ? '收起筛选' : '展开筛选' }}
-          </el-button>
+          </n-button>
         </div>
 
         <!-- Sidebar Filters -->
         <transition name="slide-fade">
           <aside v-if="!mobile || showFilter" class="filter-sidebar" :class="{ 'filter-mobile': mobile }">
-            <el-card shadow="never" class="filter-card-custom">
+            <n-card :bordered="false" class="filter-card-custom">
               <template #header>
                 <span class="filter-title">
-                  <el-icon><Filter /></el-icon>
+                  <n-icon><FunnelOutline /></n-icon>
                   筛选条件
                 </span>
               </template>
@@ -47,9 +47,9 @@
                         v-if="cat.children && cat.children.length"
                         @click.stop="toggleParent(cat.id)"
                       >
-                        <el-icon :class="{ rotated: isExpanded(cat.id) }">
-                          <CaretRight />
-                        </el-icon>
+                        <n-icon :class="{ rotated: isExpanded(cat.id) }">
+                          <CaretForwardOutline />
+                        </n-icon>
                       </span>
                       <span class="cat-name">{{ cat.name }}</span>
                       <span class="cat-count" v-if="cat.children">{{ cat.children.length }}</span>
@@ -72,41 +72,42 @@
                 </div>
               </div>
 
-              <el-divider class="filter-divider" />
+              <n-divider />
 
               <div class="filter-group">
                 <h4>标签</h4>
                 <div class="tag-list">
-                  <el-tag
+                  <n-tag
                     v-for="tag in tags"
                     :key="tag.id"
-                    :type="query.tagId === tag.id ? 'primary' : 'info'"
-                    :effect="query.tagId === tag.id ? 'dark' : 'plain'"
+                    :type="query.tagIds.includes(tag.id) ? 'primary' : 'default'"
+                    :color="query.tagIds.includes(tag.id) ? { text: '#2080f0', border: '#2080f0', color: '#eaf4ff' } : undefined"
                     class="tag-item"
                     @click="selectTag(tag.id)"
                   >
                     {{ tag.name }}
-                  </el-tag>
+                  </n-tag>
                   <div v-if="!tags.length" class="no-items">暂无标签</div>
                 </div>
               </div>
 
-              <el-divider class="filter-divider" />
+              <n-divider />
 
               <div class="filter-group">
                 <h4>排序</h4>
-                <el-radio-group v-model="query.sortBy" @change="doSearch" class="sort-group">
-                  <el-radio-button value="">默认</el-radio-button>
-                  <el-radio-button value="new">最新</el-radio-button>
-                  <el-radio-button value="hot">热门</el-radio-button>
-                  <el-radio-button value="recommend">推荐</el-radio-button>
-                </el-radio-group>
+                <n-radio-group v-model:value="query.sortBy" @update:value="doSearch" class="sort-group">
+                  <n-radio-button value="">默认</n-radio-button>
+                  <n-radio-button value="new">最新</n-radio-button>
+                  <n-radio-button value="hot">热门</n-radio-button>
+                  <n-radio-button value="recommend">推荐</n-radio-button>
+                </n-radio-group>
               </div>
 
-              <el-button @click="resetFilters" class="reset-btn" :icon="Refresh">
+              <n-button @click="resetFilters" class="reset-btn">
+                <template #icon><n-icon><RefreshOutline /></n-icon></template>
                 重置筛选
-              </el-button>
-            </el-card>
+              </n-button>
+            </n-card>
           </aside>
         </transition>
 
@@ -114,8 +115,8 @@
         <section class="resource-list">
           <!-- Search Bar -->
           <div class="search-bar">
-            <el-input
-              v-model="query.keyword"
+            <n-input
+              v-model:value="query.keyword"
               placeholder="搜索资源标题或简介..."
               clearable
               class="search-input"
@@ -123,53 +124,54 @@
               @clear="doSearch"
             >
               <template #prefix>
-                <el-icon><Search /></el-icon>
+                <n-icon><SearchOutline /></n-icon>
               </template>
-            </el-input>
-            <el-button type="primary" @click="doSearch" class="search-btn">
-              <el-icon><Search /></el-icon>
-              <span>搜索</span>
-            </el-button>
+            </n-input>
+            <n-button type="primary" @click="doSearch" class="search-btn">
+              <template #icon><n-icon><SearchOutline /></n-icon></template>
+              搜索
+            </n-button>
           </div>
 
           <!-- Active Filters -->
-          <div class="active-filters" v-if="query.categoryId || query.tagId || query.keyword || query.sortBy">
+          <div class="active-filters" v-if="query.categoryId || query.tagIds.length || query.keyword || query.sortBy">
             <span class="active-label">当前筛选：</span>
-            <el-tag
+            <n-tag
               v-if="query.keyword"
               closable
               @close="query.keyword = ''; doSearch()"
-              effect="plain"
+              :bordered="false"
             >
               关键词：{{ query.keyword }}
-            </el-tag>
-            <el-tag
+            </n-tag>
+            <n-tag
               v-if="query.categoryId"
               closable
               @close="query.categoryId = null; doSearch()"
               type="success"
-              effect="plain"
+              :bordered="false"
             >
               {{ getCategoryName(query.categoryId) }}
-            </el-tag>
-            <el-tag
-              v-if="query.tagId"
+            </n-tag>
+            <n-tag
+              v-for="tid in query.tagIds"
+              :key="tid"
               closable
-              @close="query.tagId = null; doSearch()"
+              @close="removeTag(tid)"
               type="warning"
-              effect="plain"
+              :bordered="false"
             >
-              {{ getTagName(query.tagId) }}
-            </el-tag>
-            <el-tag
+              {{ getTagName(tid) }}
+            </n-tag>
+            <n-tag
               v-if="query.sortBy"
               closable
               @close="query.sortBy = ''; doSearch()"
               type="info"
-              effect="plain"
+              :bordered="false"
             >
               {{ sortLabels[query.sortBy] }}
-            </el-tag>
+            </n-tag>
           </div>
 
           <!-- Stats -->
@@ -180,23 +182,24 @@
           <!-- Loading -->
           <div v-if="loading" class="loading-area">
             <div v-for="i in 4" :key="i" class="skeleton-item">
-              <el-skeleton animated>
-                <template #template>
-                  <div class="skeleton-row">
-                    <el-skeleton-item variant="image" class="skeleton-cover" />
-                    <div class="skeleton-info">
-                      <el-skeleton-item variant="h3" style="width: 50%; margin-bottom: 12px" />
-                      <el-skeleton-item variant="text" style="width: 80%; margin-bottom: 8px" />
-                      <el-skeleton-item variant="text" style="width: 30%" />
-                    </div>
-                  </div>
-                </template>
-              </el-skeleton>
+              <div class="skeleton-row">
+                <n-skeleton :width="180" :height="130" class="skeleton-cover" />
+                <div class="skeleton-info">
+                  <n-skeleton text style="width: 50%; margin-bottom: 12px" />
+                  <n-skeleton text style="width: 80%; margin-bottom: 8px" />
+                  <n-skeleton text style="width: 30%" />
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Empty -->
-          <el-empty v-else-if="!resources.length" description="暂无匹配的资源" />
+          <div v-else-if="!resources.length" class="empty-area">
+            <div class="empty-inner">
+              <span class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span>
+              <p>暂无匹配的资源</p>
+            </div>
+          </div>
 
           <!-- List -->
           <div v-else class="resource-items">
@@ -209,10 +212,10 @@
             >
               <div class="item-cover">
                 <img
-                  :src="item.cover || defaultCover"
+                  :src="item.cover || getTitleCover(item.title)"
                   :alt="item.title"
                   loading="lazy"
-                  @error="e => e.target.src = defaultCover"
+                  @error="e => e.target.src = getTitleCover(item.title)"
                   @load="e => e.target.classList.add('loaded')"
                   class="blur-load"
                 />
@@ -221,44 +224,41 @@
                 <h3 class="item-title">{{ item.title }}</h3>
                 <p class="item-desc" v-if="item.description">{{ item.description }}</p>
                 <div class="item-meta">
-                  <el-tag v-if="item.categoryName" size="small" effect="plain" class="item-category">
+                  <n-tag v-if="item.categoryName" size="small" :bordered="false" class="item-category">
                     {{ item.categoryName }}
-                  </el-tag>
+                  </n-tag>
                   <span class="item-stats">
-                    <el-icon><View /></el-icon> {{ item.viewCount || 0 }}
-                    <el-icon style="margin-left:12px;"><Download /></el-icon> {{ item.downloadCount || 0 }}
+                    <n-icon><EyeOutline /></n-icon> {{ item.viewCount || 0 }}
+                    <n-icon style="margin-left:12px;"><DownloadOutline /></n-icon> {{ item.downloadCount || 0 }}
                   </span>
                   <span class="item-date">{{ formatDate(item.createdAt) }}</span>
                 </div>
                 <div class="item-tags" v-if="item.tags && item.tags.length">
-                  <el-tag
+                  <n-tag
                     v-for="tag in item.tags.slice(0, 4)"
                     :key="tag.id"
                     size="small"
                     type="success"
-                    effect="plain"
+                    :bordered="false"
                   >
                     {{ tag.name }}
-                  </el-tag>
+                  </n-tag>
                 </div>
               </div>
-              <el-icon class="item-arrow"><ArrowRight /></el-icon>
+              <n-icon class="item-arrow"><ChevronForwardOutline /></n-icon>
             </router-link>
           </div>
 
           <!-- Pagination -->
           <div class="pagination-wrapper" v-if="total > 0">
-            <el-pagination
-              v-model:current-page="query.page"
+            <n-pagination
+              v-model:page="query.page"
               v-model:page-size="query.pageSize"
-              :total="total"
+              :page-count="pageCount"
               :page-sizes="[10, 20, 30]"
-              layout="total, sizes, prev, pager, next"
-              small
-              background
-              :pager-count="mobile ? 3 : 7"
-              @current-change="loadResources"
-              @size-change="loadResources"
+              show-size-picker
+              @update:page="loadResources"
+              @update:page-size="loadResources"
             />
           </div>
         </section>
@@ -270,16 +270,24 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, onActivated, onDeactivated, defineOptions, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Refresh } from '@element-plus/icons-vue'
+import {
+  FunnelOutline,
+  SearchOutline,
+  EyeOutline,
+  DownloadOutline,
+  ChevronForwardOutline,
+  CaretForwardOutline,
+  RefreshOutline
+} from '@vicons/ionicons5'
 import { searchResources } from '@/api/resource'
 import { getCategoryTree } from '@/api/category'
 import { getTagList } from '@/api/tag'
+import { getTitleCover } from '@/utils/cover'
 
 defineOptions({ name: 'ResourceList' })
 
 const route = useRoute()
 const router = useRouter()
-const defaultCover = '/default-cover.svg'
 const scrollTop = ref(0)
 
 const categories = ref([])
@@ -293,13 +301,14 @@ const mobile = ref(false)
 const expandedParents = ref(new Set())
 
 const sortLabels = { new: '最新', hot: '热门', recommend: '推荐' }
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)))
 
 const query = reactive({
   page: 1,
   pageSize: 10,
   categoryId: null,
   keyword: '',
-  tagId: null,
+  tagIds: [],
   sortBy: ''
 })
 
@@ -330,7 +339,9 @@ onMounted(async () => {
   // Read query params
   if (route.query.keyword) query.keyword = route.query.keyword
   if (route.query.categoryId) query.categoryId = Number(route.query.categoryId)
-  if (route.query.tagId) query.tagId = Number(route.query.tagId)
+  if (route.query.tagIds) {
+    query.tagIds = String(route.query.tagIds).split(',').map(Number).filter(Boolean)
+  }
 
   const [catRes, tagRes] = await Promise.all([
     getCategoryTree(),
@@ -357,9 +368,10 @@ onActivated(() => {
     const catId = Number(route.query.categoryId)
     if (catId !== query.categoryId) { query.categoryId = catId; changed = true }
   }
-  if (route.query.tagId) {
-    const tagId = Number(route.query.tagId)
-    if (tagId !== query.tagId) { query.tagId = tagId; changed = true }
+  if (route.query.tagIds) {
+    const tagIds = String(route.query.tagIds).split(',').map(Number).filter(Boolean).sort()
+    const currentTagIds = [...query.tagIds].sort()
+    if (JSON.stringify(tagIds) !== JSON.stringify(currentTagIds)) { query.tagIds = tagIds; changed = true }
   }
   if (changed) {
     query.page = 1
@@ -394,9 +406,23 @@ function selectCategory(id) {
 }
 
 function selectTag(id) {
-  query.tagId = query.tagId === id ? null : id
+  const idx = query.tagIds.indexOf(id)
+  if (idx > -1) {
+    query.tagIds.splice(idx, 1)
+  } else {
+    query.tagIds.push(id)
+  }
   query.page = 1
   loadResources()
+}
+
+function removeTag(id) {
+  const idx = query.tagIds.indexOf(id)
+  if (idx > -1) {
+    query.tagIds.splice(idx, 1)
+    query.page = 1
+    loadResources()
+  }
 }
 
 function doSearch() {
@@ -406,7 +432,7 @@ function doSearch() {
 
 function resetFilters() {
   query.categoryId = null
-  query.tagId = null
+  query.tagIds = []
   query.keyword = ''
   query.sortBy = ''
   query.page = 1
@@ -418,7 +444,7 @@ async function loadResources() {
   try {
     const params = { ...query }
     if (!params.categoryId) delete params.categoryId
-    if (!params.tagId) delete params.tagId
+    if (!params.tagIds || !params.tagIds.length) delete params.tagIds
     if (!params.keyword) delete params.keyword
     if (!params.sortBy) delete params.sortBy
     const res = await searchResources(params)
@@ -461,7 +487,7 @@ function formatDate(date) {
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
-.filter-card-custom :deep(.el-card__body) {
+.filter-card-custom :deep(.n-card__content) {
   padding: 16px 20px 20px;
 }
 
@@ -548,10 +574,10 @@ function formatDate(date) {
   font-size: 12px;
   color: var(--text-secondary);
 }
-.cat-toggle .el-icon {
+.cat-toggle .n-icon {
   transition: transform 0.2s ease;
 }
-.cat-toggle .el-icon.rotated {
+.cat-toggle .n-icon.rotated {
   transform: rotate(90deg);
 }
 
@@ -611,13 +637,9 @@ function formatDate(date) {
 /* Sort group */
 .sort-group {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
 }
-.sort-group :deep(.el-radio-button__inner) {
-  border-radius: 6px !important;
+.sort-group :deep(.n-radio-button__label) {
   padding: 6px 14px;
-  border: 1px solid var(--border) !important;
   font-size: 13px;
 }
 
@@ -643,7 +665,7 @@ function formatDate(date) {
 .search-input {
   flex: 1;
 }
-.search-input :deep(.el-input__wrapper) {
+.search-input :deep(.n-input-wrapper) {
   border-radius: 8px;
   height: 42px;
 }
@@ -831,9 +853,6 @@ function formatDate(date) {
   border-radius: 12px;
 }
 .skeleton-cover {
-  width: 180px;
-  height: 130px;
-  border-radius: 8px;
   flex-shrink: 0;
 }
 .skeleton-info {
@@ -841,6 +860,28 @@ function formatDate(date) {
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+/* Empty area */
+.empty-area {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.empty-icon {
+  display: block;
+  margin-bottom: 8px;
+}
+.empty-icon svg {
+  display: block;
+  margin: 0 auto;
+}
+.empty-area p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 /* ====== Mobile ====== */
@@ -904,7 +945,7 @@ function formatDate(date) {
     justify-content: flex-start;
     padding-bottom: 8px;
   }
-  .pagination-wrapper :deep(.el-pagination) {
+  .pagination-wrapper :deep(.n-pagination) {
     white-space: nowrap;
   }
 }

@@ -1,192 +1,112 @@
 <template>
   <div class="admin-layout">
     <!-- Sidebar -->
-    <el-menu
-      :default-active="activeMenu"
-      :collapse="isCollapse"
-      class="admin-sidebar"
-      background-color="#1a1a2e"
-      text-color="#a0a4b8"
-      active-text-color="#409eff"
-      router
-    >
-      <div class="sidebar-header">
-        <div class="sidebar-logo">
-          <img src="/logo.jpg" alt="小初学习资料圈" class="sidebar-logo-img" :class="{ collapsed: isCollapse }" />
-          <span v-if="!isCollapse" class="sidebar-brand">小初学习资料圈</span>
+    <div class="admin-sidebar-wrapper" :class="{ collapsed: isCollapse }">
+      <div class="sidebar-inner">
+        <div class="sidebar-header">
+          <div class="sidebar-logo">
+            <img src="/logo.jpg" alt="小初学习资料圈" class="sidebar-logo-img" :class="{ collapsed: isCollapse }" />
+            <transition name="fade">
+              <span v-if="!isCollapse" class="sidebar-brand">小初学习资料圈管理后台</span>
+            </transition>
+          </div>
+        </div>
+
+        <div class="sidebar-bell" :class="{ collapsed: isCollapse }" @click="bellVisible = true">
+          <n-badge :value="unreadCount" :max="99" :show="unreadCount > 0">
+            <n-icon :size="isCollapse ? 20 : 18"><NotificationsOutline /></n-icon>
+          </n-badge>
+          <transition name="fade">
+            <span v-if="!isCollapse" class="bell-text">公告通知</span>
+          </transition>
+        </div>
+
+        <div class="sidebar-menu">
+          <div v-for="section in menuSections" :key="section.label" class="menu-section">
+            <div v-if="!isCollapse && section.label" class="menu-label">{{ section.label }}</div>
+            <div
+              v-for="item in section.items"
+              :key="item.key"
+              class="menu-item"
+              :class="{ active: activeMenu === item.key }"
+              @click="handleMenuClick(item)"
+            >
+              <span class="menu-icon" v-html="item.icon"></span>
+              <transition name="fade">
+                <span v-if="!isCollapse" class="menu-text">{{ item.label }}</span>
+              </transition>
+              <div v-if="activeMenu === item.key" class="menu-active-indicator"></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Badge notification -->
-      <div class="sidebar-bell-wrap">
-        <el-popover
-          placement="right-start"
-          :width="340"
-          trigger="click"
-          v-model:visible="bellVisible"
-          @show="onBellShow"
-          popper-class="admin-bell-popover"
-          transition="scale-in"
-        >
-          <template #reference>
-            <div class="bell-menu-item" :class="{ collapsed: isCollapse }">
-              <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99" class="bell-badge">
-                <el-icon :size="isCollapse ? 20 : 18"><Bell /></el-icon>
-              </el-badge>
-              <span v-if="!isCollapse" class="bell-menu-text">公告通知</span>
-              <span v-if="unreadCount > 0 && !isCollapse" class="bell-count">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-            </div>
-          </template>
-
-          <div class="popover-content">
-            <div class="popover-header">
-              <span class="popover-title">公告通知</span>
-              <el-button text size="small" @click="markAllRead">全部已读</el-button>
-            </div>
-
-            <div v-if="recentList.length === 0" class="popover-empty">
-              <el-empty description="暂无公告" :image-size="60" />
-            </div>
-
-            <div v-else class="popover-list">
-              <div
-                v-for="item in recentList"
-                :key="item.id"
-                class="popover-item"
-                :class="{ unread: item.id > lastReadId }"
-                @click="goAnnouncement(item.id)"
-              >
-                <div class="item-title">
-                  <span v-if="item.id > lastReadId" class="unread-dot"></span>
-                  <span class="item-text">{{ item.title }}</span>
-                </div>
-                <div class="item-time">{{ item.createdAt }}</div>
-              </div>
-            </div>
-
-            <div class="popover-footer">
-              <el-button text size="small" @click="openCreateDialog">
-                <el-icon><Plus /></el-icon> 发布新公告
-              </el-button>
-              <router-link to="/admin/announcement" class="view-all" @click="bellVisible = false">
-                查看全部 <el-icon><ArrowRight /></el-icon>
-              </router-link>
-            </div>
-          </div>
-        </el-popover>
+      <div class="sidebar-footer" v-if="!isCollapse">
+        <div class="sidebar-footer-user">
+          <n-avatar round :size="28" color="#6366f1" />
+          <span class="footer-username">{{ adminInfo?.nickname || adminInfo?.username || '管理员' }}</span>
+        </div>
       </div>
-
-      <!-- Menu sections -->
-      <div class="menu-section-label" v-if="!isCollapse">内容管理</div>
-      <el-menu-item index="/admin/dashboard">
-        <el-icon><Odometer /></el-icon>
-        <template #title>控制台</template>
-      </el-menu-item>
-      <el-menu-item index="/admin/category">
-        <el-icon><Menu /></el-icon>
-        <template #title>分类管理</template>
-      </el-menu-item>
-      <el-menu-item index="/admin/tag">
-        <el-icon><CollectionTag /></el-icon>
-        <template #title>标签管理</template>
-      </el-menu-item>
-      <el-menu-item index="/admin/resource">
-        <el-icon><Document /></el-icon>
-        <template #title>资源管理</template>
-      </el-menu-item>
-      <el-menu-item index="/admin/download-log">
-        <el-icon><List /></el-icon>
-        <template #title>下载日志</template>
-      </el-menu-item>
-      <el-menu-item index="/admin/import">
-        <el-icon><Upload /></el-icon>
-        <template #title>批量导入</template>
-      </el-menu-item>
-      <el-menu-item index="/admin/keyword-rule">
-        <el-icon><Tools /></el-icon>
-        <template #title>关键词规则</template>
-      </el-menu-item>
-      <el-menu-item index="/admin/announcement">
-        <el-icon><Bell /></el-icon>
-        <template #title>公告管理</template>
-      </el-menu-item>
-
-      <div class="sidebar-divider" v-if="!isCollapse"></div>
-      <div class="menu-section-label" v-if="!isCollapse && (isSuperAdmin || true)">系统设置</div>
-
-      <el-menu-item index="/admin/password">
-        <el-icon><Lock /></el-icon>
-        <template #title>修改密码</template>
-      </el-menu-item>
-      <el-menu-item v-if="isSuperAdmin" index="/admin/admin-manage">
-        <el-icon><User /></el-icon>
-        <template #title>管理员管理</template>
-      </el-menu-item>
-      <el-menu-item v-if="isSuperAdmin" index="/admin/qrcode">
-        <el-icon><Connection /></el-icon>
-        <template #title>资料群二维码</template>
-      </el-menu-item>
-      <el-menu-item v-if="isSuperAdmin" index="/admin/contact">
-        <el-icon><Iphone /></el-icon>
-        <template #title>联系方式</template>
-      </el-menu-item>
-      <el-menu-item v-if="isSuperAdmin" index="/admin/disclaimer">
-        <el-icon><WarningFilled /></el-icon>
-        <template #title>免责声明</template>
-      </el-menu-item>
-      <el-menu-item index="/" onclick="window.open('/','_blank')">
-        <el-icon><View /></el-icon>
-        <template #title>返回前台</template>
-      </el-menu-item>
-    </el-menu>
+    </div>
 
     <!-- Mobile overlay -->
-    <div class="mobile-sidebar-overlay" v-if="!isCollapse && mobileSidebar" @click="isCollapse = true"></div>
+    <div class="mobile-overlay" v-if="!isCollapse && mobileSidebar" @click="isCollapse = true"></div>
+
+    <!-- Bell Modal -->
+    <n-modal v-model:show="bellVisible" preset="card" title="公告通知" style="width:380px" :bordered="false" :segmented="{ footer: true }">
+      <template #header-extra>
+        <n-button text size="tiny" @click="markAllRead">全部已读</n-button>
+      </template>
+      <div v-if="recentList.length === 0" class="bell-empty">
+        <n-empty description="暂无公告" />
+      </div>
+      <div v-else class="bell-list">
+        <div
+          v-for="item in recentList"
+          :key="item.id"
+          class="bell-item"
+          :class="{ unread: item.id > lastReadId }"
+          @click="goAnnouncement(item.id)"
+        >
+          <div class="bell-item-dot" v-if="item.id > lastReadId"></div>
+          <div class="bell-item-content">
+            <div class="bell-item-title">{{ item.title }}</div>
+            <div class="bell-item-time">{{ item.createdAt }}</div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <n-button text size="tiny" @click="openCreateDialog">发布新公告</n-button>
+          <router-link to="/admin/announcement" class="bell-view-all" @click="bellVisible = false">查看全部</router-link>
+        </div>
+      </template>
+    </n-modal>
 
     <!-- Main Area -->
     <div class="admin-main" :class="{ collapsed: isCollapse }">
-      <!-- Topbar -->
       <header class="admin-topbar">
         <div class="topbar-left">
-          <el-button text @click="isCollapse = !isCollapse" class="collapse-btn">
-            <el-icon><Fold v-if="!isCollapse" /><Expand v-else /></el-icon>
-          </el-button>
-          <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/admin/dashboard' }">首页</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="$route.meta.title">{{ $route.meta.title }}</el-breadcrumb-item>
-          </el-breadcrumb>
+          <n-button quaternary @click="isCollapse = !isCollapse" class="collapse-btn">
+            <template #icon>
+              <n-icon :size="18"><MenuOutline v-if="!isCollapse" /><GridOutline v-else /></n-icon>
+            </template>
+          </n-button>
+          <n-breadcrumb>
+            <n-breadcrumb-item v-if="$route.meta.title">{{ $route.meta.title }}</n-breadcrumb-item>
+          </n-breadcrumb>
         </div>
         <div class="topbar-right">
-          <el-dropdown @command="handleCommand" trigger="click">
-            <span class="user-info">
-              <el-avatar :size="34" icon="UserFilled" class="user-avatar" />
+          <n-dropdown trigger="click" :options="dropdownOptions" @select="handleDropdown">
+            <div class="user-info">
+              <n-avatar round :size="32" color="#6366f1" />
               <span class="username">{{ adminInfo?.nickname || adminInfo?.username || '管理员' }}</span>
-              <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="password">
-                  <el-icon><Lock /></el-icon> 修改密码
-                </el-dropdown-item>
-                <el-dropdown-item v-if="isSuperAdmin" command="contact">
-                  <el-icon><Iphone /></el-icon> 联系方式
-                </el-dropdown-item>
-                <el-dropdown-item v-if="isSuperAdmin" command="disclaimer">
-                  <el-icon><WarningFilled /></el-icon> 免责声明
-                </el-dropdown-item>
-                <el-dropdown-item command="home">
-                  <el-icon><View /></el-icon> 返回前台
-                </el-dropdown-item>
-                <el-dropdown-item divided command="logout">
-                  <el-icon><SwitchButton /></el-icon> 退出登录
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+              <n-icon :size="14" class="arrow-down"><ChevronDownOutline /></n-icon>
+            </div>
+          </n-dropdown>
         </div>
       </header>
 
-      <!-- Content -->
       <main class="admin-content">
         <router-view v-slot="{ Component }">
           <transition name="slide-fade" mode="out-in">
@@ -194,6 +114,13 @@
           </transition>
         </router-view>
       </main>
+
+      <!-- Admin Footer -->
+      <footer class="admin-footer">
+        <span>小初学习资料圈</span>
+        <span class="admin-footer-divider">|</span>
+        <span>&copy; 2024-2026 小初学习资料圈 Admin</span>
+      </footer>
     </div>
   </div>
 </template>
@@ -201,20 +128,17 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { useDialog } from 'naive-ui'
+import { NotificationsOutline, MenuOutline, GridOutline, ChevronDownOutline } from '@vicons/ionicons5'
 import { getProfile } from '@/api/admin'
 import { getUnreadCount, getRecentAnnouncements } from '@/api/announcement'
 
 const router = useRouter()
 const route = useRoute()
-
-function initAdminInfo() {
-  try { return JSON.parse(localStorage.getItem('adminInfo') || '{}') }
-  catch { return {} }
-}
+const dialog = useDialog()
 
 const isCollapse = ref(false)
-const adminInfo = ref(initAdminInfo())
+const adminInfo = ref({})
 const mobileSidebar = ref(false)
 
 onMounted(() => {
@@ -228,9 +152,59 @@ onMounted(() => {
 })
 
 const activeMenu = computed(() => route.path)
+
 const isSuperAdmin = computed(() => adminInfo.value?.role === 0)
 
-// ====== Notification bell ======
+const svg = (path) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`
+
+const menuSections = computed(() => [
+  {
+    label: '',
+    items: [
+      { key: '/admin/dashboard', label: '控制台', icon: svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>') }
+    ]
+  },
+  {
+    label: '内容管理',
+    items: [
+      { key: '/admin/category', label: '分类管理', icon: svg('<path d="M4 6h16M4 12h16M4 18h16"/>') },
+      { key: '/admin/tag', label: '标签管理', icon: svg('<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>') },
+      { key: '/admin/resource', label: '资源管理', icon: svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>') },
+      { key: '/admin/download-log', label: '下载日志', icon: svg('<polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>') },
+      { key: '/admin/import', label: '批量导入', icon: svg('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>') },
+      { key: '/admin/keyword-rule', label: '关键词规则', icon: svg('<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>') },
+      { key: '/admin/announcement', label: '公告管理', icon: svg('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>') }
+    ]
+  },
+  {
+    label: '系统设置',
+    items: [
+      { key: '/admin/password', label: '修改密码', icon: svg('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>') },
+      ...(isSuperAdmin.value ? [
+        { key: '/admin/admin-manage', label: '管理员管理', icon: svg('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>') },
+        { key: '/admin/qrcode', label: '资料群二维码', icon: svg('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>') },
+        { key: '/admin/contact', label: '联系方式', icon: svg('<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>') },
+        { key: '/admin/disclaimer', label: '免责声明', icon: svg('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>') }
+      ] : [])
+    ]
+  },
+  {
+    label: '',
+    items: [
+      { key: '/front-home', label: '返回前台', icon: svg('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>') }
+    ]
+  }
+])
+
+function handleMenuClick(item) {
+  if (item.key === '/front-home') {
+    window.location.href = '/'
+    return
+  }
+  router.push(item.key)
+}
+
+// Notification bell
 const bellVisible = ref(false)
 const unreadCount = ref(0)
 const recentList = ref([])
@@ -242,49 +216,73 @@ function loadLastReadId() {
 }
 function saveLastReadId(id) {
   lastReadId.value = id
-  try { localStorage.setItem('adminAnnouncementLastReadId', String(id)) } catch { /* noop */ }
+  try { localStorage.setItem('adminAnnouncementLastReadId', String(id)) } catch { }
 }
 
 async function fetchUnreadCount() {
-  try { const res = await getUnreadCount(lastReadId.value); unreadCount.value = res.data?.count || 0 }
-  catch { /* noop */ }
+  try {
+    const res = await getUnreadCount(lastReadId.value)
+    unreadCount.value = res.data?.count || 0
+  } catch { }
 }
 async function fetchRecent() {
-  try { const res = await getRecentAnnouncements(); recentList.value = res.data || [] }
-  catch { /* noop */ }
+  try {
+    const res = await getRecentAnnouncements()
+    recentList.value = res.data || []
+  } catch { }
 }
-function onBellShow() { fetchRecent() }
 function markAllRead() {
   const maxId = recentList.value.reduce((max, item) => Math.max(max, item.id), 0)
   if (maxId > 0) saveLastReadId(maxId)
-  unreadCount.value = 0; bellVisible.value = false
+  unreadCount.value = 0
+  bellVisible.value = false
 }
-function goAnnouncement(id) { bellVisible.value = false; router.push('/admin/announcement') }
-function openCreateDialog() { bellVisible.value = false; router.push('/admin/announcement') }
+function goAnnouncement(id) {
+  bellVisible.value = false
+  router.push('/admin/announcement')
+}
+function openCreateDialog() {
+  bellVisible.value = false
+  router.push('/admin/announcement')
+}
 
 onMounted(async () => {
-  loadLastReadId(); fetchUnreadCount()
+  loadLastReadId()
+  fetchUnreadCount()
   try {
     const res = await getProfile()
     adminInfo.value = res.data
     localStorage.setItem('adminInfo', JSON.stringify(res.data))
-  } catch { /* Token invalid — interceptor handles */ }
+  } catch { }
 })
 
 watch(() => route.path, () => { loadLastReadId(); fetchUnreadCount() })
 
-function handleCommand(command) {
-  if (command === 'logout') {
-    ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
-    }).then(() => {
-      localStorage.removeItem('adminToken'); localStorage.removeItem('adminInfo')
-      router.push('/admin/login')
-    }).catch(() => {})
-  } else if (command === 'password') router.push('/admin/password')
-  else if (command === 'contact') router.push('/admin/contact')
-  else if (command === 'disclaimer') router.push('/admin/disclaimer')
-  else if (command === 'home') window.open('/', '_blank')
+const dropdownOptions = [
+  { label: '修改密码', key: 'password' },
+  { label: '返回前台', key: 'home' },
+  { type: 'divider' },
+  { label: '退出登录', key: 'logout' }
+]
+
+function handleDropdown(key) {
+  if (key === 'logout') {
+    dialog.warning({
+      title: '提示',
+      content: '确定要退出登录吗？',
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        localStorage.removeItem('adminToken')
+        localStorage.removeItem('adminInfo')
+        router.push('/admin/login')
+      }
+    })
+  } else if (key === 'password') {
+    router.push('/admin/password')
+  } else if (key === 'home') {
+    window.location.href = '/'
+  }
 }
 </script>
 
@@ -295,254 +293,156 @@ function handleCommand(command) {
   overflow: hidden;
 }
 
-/* ========== Sidebar ========== */
-.admin-sidebar {
-  height: 100vh;
-  border-right: none;
-  overflow-y: auto;
-  overflow-x: hidden;
+.admin-sidebar-wrapper {
+  width: 240px;
   flex-shrink: 0;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 100;
+  background: linear-gradient(180deg, #0a0a1a 0%, #0d0d24 100%);
   display: flex;
   flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  z-index: 100;
 }
-.admin-sidebar:not(.el-menu--collapse) { width: var(--sidebar-width); }
-.admin-sidebar.el-menu--collapse { width: var(--sidebar-collapsed); }
+.admin-sidebar-wrapper.collapsed { width: 64px; }
+
+.sidebar-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.sidebar-inner::-webkit-scrollbar { width: 3px; }
+.sidebar-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 .sidebar-header {
   height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
 }
 
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
+.sidebar-logo { display: flex; align-items: center; gap: 10px; }
 .sidebar-logo-img {
-  height: 40px;
-  width: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  transition: all 0.3s;
-  flex-shrink: 0;
+  height: 36px; width: 36px; border-radius: 50%; object-fit: cover;
+  transition: all 0.3s; flex-shrink: 0;
 }
-.sidebar-logo-img.collapsed {
-  height: 36px;
-  width: 36px;
-}
-
+.sidebar-logo-img.collapsed { height: 32px; width: 32px; }
 .sidebar-brand {
-  font-size: 15px;
-  font-weight: 700;
-  color: white;
+  font-size: 16px; font-weight: 700;
+  color: #ffffff;
   white-space: nowrap;
-  overflow: hidden;
 }
 
-/* Menu section labels */
-.menu-section-label {
-  padding: 12px 20px 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-/* ====== Bell ====== */
-.sidebar-bell-wrap {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.sidebar-bell {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px; cursor: pointer; color: #8b8fa3;
+  transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.04);
   flex-shrink: 0;
 }
+.sidebar-bell:hover { color: #e0e0e0; background: rgba(255,255,255,0.04); }
+.sidebar-bell.collapsed { justify-content: center; padding: 12px 0; }
+.bell-text { font-size: 13px; font-weight: 500; }
 
-.bell-menu-item {
-  display: flex;
-  align-items: center;
-  height: 50px;
-  padding: 0 20px;
-  cursor: pointer;
-  color: #a0a4b8;
-  transition: var(--transition);
-  gap: 14px;
-  position: relative;
+.sidebar-menu { flex: 1; padding: 8px 0; }
+.menu-section { margin-bottom: 4px; }
+.menu-label {
+  padding: 16px 20px 6px; font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px;
 }
-.bell-menu-item:hover {
-  color: #409eff;
-  background: rgba(64, 158, 255, 0.08);
+.menu-item {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  height: 42px; padding: 0 20px; cursor: pointer; color: #8b8fa3;
+  font-size: 14px; font-weight: 500; transition: all 0.2s;
+  margin: 1px 8px; border-radius: 8px;
 }
-.bell-menu-item.collapsed {
-  justify-content: center;
-  padding: 0;
-}
-.bell-menu-text {
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.bell-count {
-  margin-left: auto;
-  font-size: 11px;
-  background: rgba(230, 162, 60, 0.2);
-  color: #e6a23c;
-  padding: 0 6px;
-  border-radius: 8px;
-  line-height: 16px;
-  min-width: 18px;
-  text-align: center;
-}
-.bell-badge :deep(.el-badge__content) {
-  background: linear-gradient(135deg, #e6a23c, #d48806);
-  border: 2px solid #1a1a2e;
-  font-size: 11px;
-  height: 18px;
-  line-height: 14px;
-  padding: 0 5px;
+.menu-item:hover { color: #e0e0e0; background: rgba(255,255,255,0.06); }
+.menu-item.active { color: #fff; background: rgba(99,102,241,0.15); }
+.menu-icon { display: flex; align-items: center; width: 18px; height: 18px; flex-shrink: 0; }
+.menu-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-active-indicator {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: linear-gradient(180deg, #6366f1, #8b5cf6);
+  border-radius: 0 3px 3px 0;
 }
 
-/* ====== Popover ====== */
-.popover-content { font-size: 14px; }
-.popover-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-light);
+.sidebar-footer {
+  padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
 }
-.popover-title { font-weight: 600; font-size: 15px; color: var(--text-primary); }
-.popover-empty { padding: 8px 0; }
-.popover-list { max-height: 340px; overflow-y: auto; margin: 0 -4px; }
-.popover-item {
-  padding: 10px 8px;
-  border-bottom: 1px solid var(--border-light);
-  cursor: pointer;
-  transition: var(--transition);
-  border-radius: 6px;
-}
-.popover-item:hover { background: var(--bg); }
-.popover-item:last-child { border-bottom: none; }
-.popover-item.unread { background: rgba(64, 158, 255, 0.04); }
-.item-title { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-.unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
-.item-text { font-size: 14px; color: var(--text-primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.item-time { font-size: 12px; color: var(--text-placeholder); padding-left: 14px; }
-.popover-footer {
-  border-top: 1px solid var(--border-light);
-  padding-top: 12px;
-  margin-top: 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.view-all { font-size: 13px; color: var(--primary); display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+.sidebar-footer-user { display: flex; align-items: center; gap: 10px; }
+.footer-username { font-size: 13px; color: #8b8fa3; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.sidebar-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.06);
-  margin: 8px 20px;
+.mobile-overlay { display: none; }
+@media (max-width: 768px) {
+  .mobile-overlay {
+    display: block; position: fixed; inset: 0; z-index: 99;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+  }
 }
 
-/* ========== Main ========== */
-.admin-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
+.bell-empty { padding: 20px 0; }
+.bell-list { max-height: 340px; overflow-y: auto; margin: 0 -12px; }
+.bell-item {
+  display: flex; gap: 8px; padding: 10px 12px; cursor: pointer;
+  border-radius: 8px; transition: all 0.2s;
 }
+.bell-item:hover { background: rgba(99,102,241,0.04); }
+.bell-item.unread { background: rgba(99,102,241,0.04); }
+.bell-item-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #6366f1;
+  flex-shrink: 0; margin-top: 6px; box-shadow: 0 0 6px rgba(99,102,241,0.4);
+}
+.bell-item-content { flex: 1; min-width: 0; }
+.bell-item-title { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bell-item-time { font-size: 12px; color: var(--text-placeholder); }
+.bell-view-all { font-size: 13px; color: var(--primary); text-decoration: none; }
 
-/* ========== Topbar ========== */
+.admin-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
 .admin-topbar {
   height: 64px;
-  background: white;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
   border-bottom: 1px solid var(--border-light);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; flex-shrink: 0;
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.collapse-btn { padding: 8px; border-radius: 8px; color: var(--text-secondary); }
+.collapse-btn:hover { background: var(--bg); }
+.topbar-right { display: flex; align-items: center; }
+.user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
+.user-info:hover { background: var(--bg); }
+.username { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.arrow-down { color: var(--text-secondary); }
+
+.admin-content { flex: 1; padding: 24px; overflow-y: auto; background: var(--bg); }
+
+.admin-footer {
+  height: 48px;
   flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
-}
-
-.topbar-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-}
-
-.collapse-btn {
-  font-size: 18px;
-  padding: 8px;
-  border-radius: 8px;
-  transition: var(--transition);
-}
-.collapse-btn:hover {
-  background: var(--bg);
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
+  justify-content: center;
   gap: 8px;
-  cursor: pointer;
-  padding: 6px 14px;
-  border-radius: 10px;
-  transition: var(--transition);
+  font-size: 13px;
+  color: #475569;
+  background: #f8fafc;
+  border-top: 1px solid var(--border-light);
 }
-.user-info:hover {
-  background: var(--bg);
-}
-
-.user-avatar {
-  flex-shrink: 0;
-}
-
-.username {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.dropdown-arrow {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* ========== Content ========== */
-.admin-content {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-  background: var(--bg);
-}
-
-/* Mobile overlay */
-.mobile-sidebar-overlay {
-  display: none;
+.admin-footer-divider {
+  color: #cbd5e1;
 }
 
 @media (max-width: 768px) {
   .admin-content { padding: 16px; }
   .admin-topbar { padding: 0 12px; }
-  .mobile-sidebar-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 99;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-  }
   .username { display: none; }
 }
 </style>

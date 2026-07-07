@@ -6,7 +6,10 @@
     <!-- Recommended Resources -->
     <section class="section section-alt" ref="recommendSection">
       <div class="page-container">
-        <h2 class="section-title">⭐ 推荐资源</h2>
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="#f59e0b" stroke="#f59e0b" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          推荐资源
+        </h2>
         <div v-if="recommendResources.length" class="resource-grid">
           <ResourceCard
             v-for="(item, index) in recommendResources"
@@ -16,20 +19,18 @@
             class="card-enter"
           />
         </div>
-        <el-empty v-else-if="!recommendLoading" description="暂无推荐资源" />
+        <div v-else-if="!recommendLoading" class="empty-state">
+          <span class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg></span>
+          <p class="empty-text">暂无推荐资源</p>
+        </div>
         <div v-if="recommendLoading" class="resource-grid">
-          <el-skeleton :count="4" animated>
-            <template #template>
-              <div style="padding:0">
-                <el-skeleton-item variant="image" style="width:100%;height:180px" />
-                <div style="padding:16px">
-                  <el-skeleton-item variant="h3" style="width:60%;margin-bottom:8px" />
-                  <el-skeleton-item variant="text" style="width:80%;margin-bottom:8px" />
-                  <el-skeleton-item variant="text" style="width:40%" />
-                </div>
-              </div>
-            </template>
-          </el-skeleton>
+          <div v-for="i in 4" :key="i" class="skeleton-card">
+            <n-skeleton :height="180" class="skeleton-img" />
+            <div class="skeleton-body">
+              <n-skeleton text :repeat="2" />
+              <n-skeleton text style="width: 40%; margin-top: 8px;" />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -38,7 +39,7 @@
     <section class="section" ref="hotSection">
       <div class="page-container">
         <h2 class="section-title">
-          <el-icon style="color:#f56c6c"><TrendCharts /></el-icon>
+          <n-icon color="#f56c6c"><TrendingUpOutline /></n-icon>
           热门资源
         </h2>
         <div v-if="hotResources.length" class="resource-grid">
@@ -50,20 +51,18 @@
             class="card-enter"
           />
         </div>
-        <el-empty v-else-if="!hotLoading" description="暂无热门资源" />
+        <div v-else-if="!hotLoading" class="empty-state">
+          <span class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span>
+          <p class="empty-text">暂无热门资源</p>
+        </div>
         <div v-if="hotLoading" class="resource-grid">
-          <el-skeleton :count="4" animated>
-            <template #template>
-              <div style="padding:0">
-                <el-skeleton-item variant="image" style="width:100%;height:180px" />
-                <div style="padding:16px">
-                  <el-skeleton-item variant="h3" style="width:60%;margin-bottom:8px" />
-                  <el-skeleton-item variant="text" style="width:80%;margin-bottom:8px" />
-                  <el-skeleton-item variant="text" style="width:40%" />
-                </div>
-              </div>
-            </template>
-          </el-skeleton>
+          <div v-for="i in 4" :key="i" class="skeleton-card">
+            <n-skeleton :height="180" class="skeleton-img" />
+            <div class="skeleton-body">
+              <n-skeleton text :repeat="2" />
+              <n-skeleton text style="width: 40%; margin-top: 8px;" />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -72,7 +71,7 @@
     <section class="section section-alt" ref="latestSection">
       <div class="page-container">
         <h2 class="section-title">
-          <el-icon style="color:#409eff"><Clock /></el-icon>
+          <n-icon color="#409eff"><TimeOutline /></n-icon>
           最新资源
         </h2>
         <div v-if="latestResources.length" class="resource-grid">
@@ -84,20 +83,18 @@
             class="card-enter"
           />
         </div>
-        <el-empty v-else-if="!latestLoading" description="暂无最新资源" />
+        <div v-else-if="!latestLoading" class="empty-state">
+          <span class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></span>
+          <p class="empty-text">暂无最新资源</p>
+        </div>
         <div v-if="latestLoading" class="resource-grid">
-          <el-skeleton :count="4" animated>
-            <template #template>
-              <div style="padding:0">
-                <el-skeleton-item variant="image" style="width:100%;height:180px" />
-                <div style="padding:16px">
-                  <el-skeleton-item variant="h3" style="width:60%;margin-bottom:8px" />
-                  <el-skeleton-item variant="text" style="width:80%;margin-bottom:8px" />
-                  <el-skeleton-item variant="text" style="width:40%" />
-                </div>
-              </div>
-            </template>
-          </el-skeleton>
+          <div v-for="i in 4" :key="i" class="skeleton-card">
+            <n-skeleton :height="180" class="skeleton-img" />
+            <div class="skeleton-body">
+              <n-skeleton text :repeat="2" />
+              <n-skeleton text style="width: 40%; margin-top: 8px;" />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -107,8 +104,8 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Banner from '@/components/front/Banner.vue'
-import CategoryNav from '@/components/front/CategoryNav.vue'
 import ResourceCard from '@/components/front/ResourceCard.vue'
+import { TrendingUpOutline, TimeOutline } from '@vicons/ionicons5'
 import { getRecommendResources, getHotResources, getLatestResources } from '@/api/resource'
 
 const recommendResources = ref([])
@@ -119,7 +116,6 @@ const hotLoading = ref(true)
 const latestLoading = ref(true)
 
 // Scroll reveal observer
-const categorySection = ref(null)
 const recommendSection = ref(null)
 const hotSection = ref(null)
 const latestSection = ref(null)
@@ -145,7 +141,6 @@ onMounted(async () => {
     { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
   )
 
-  observeSection(categorySection.value)
   observeSection(recommendSection.value)
   observeSection(hotSection.value)
   observeSection(latestSection.value)
@@ -195,6 +190,42 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 24px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.empty-icon {
+  display: block;
+  margin-bottom: 12px;
+}
+.empty-icon svg {
+  display: block;
+  margin: 0 auto;
+}
+.empty-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Skeleton card */
+.skeleton-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.skeleton-img {
+  border-radius: 0 !important;
+}
+.skeleton-body {
+  padding: 16px;
 }
 
 /* Card entrance animation */

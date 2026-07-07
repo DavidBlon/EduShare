@@ -2,7 +2,7 @@
   <router-link :to="`/resource/${resource.id}`" class="resource-card" @mouseenter="hover = true" @mouseleave="hover = false">
     <div class="card-cover">
       <img
-        :src="resource.cover || defaultCover"
+        :src="resource.cover || defaultCover()"
         :alt="resource.title"
         loading="lazy"
         class="cover-img"
@@ -20,13 +20,13 @@
 
       <!-- Status (draft) -->
       <div class="card-status" v-if="resource.status === 0">
-        <el-tag size="small" type="info" effect="dark">草稿</el-tag>
+        <n-tag size="small" type="info">草稿</n-tag>
       </div>
 
       <!-- View count on hover -->
       <div class="card-stats-overlay" :class="{ visible: hover }">
-        <span><el-icon><View /></el-icon> {{ resource.viewCount || 0 }}</span>
-        <span><el-icon><Download /></el-icon> {{ resource.downloadCount || 0 }}</span>
+        <span><n-icon><EyeOutline /></n-icon> {{ resource.viewCount || 0 }}</span>
+        <span><n-icon><DownloadOutline /></n-icon> {{ resource.downloadCount || 0 }}</span>
       </div>
     </div>
 
@@ -35,20 +35,20 @@
       <p class="card-desc" v-if="resource.description">{{ truncate(resource.description, 60) }}</p>
       <div class="card-meta">
         <span class="meta-stats">
-          <el-icon><View /></el-icon> {{ resource.viewCount || 0 }}
-          <el-icon style="margin-left:8px;"><Download /></el-icon> {{ resource.downloadCount || 0 }}
+          <n-icon><EyeOutline /></n-icon> {{ resource.viewCount || 0 }}
+          <n-icon style="margin-left:8px;"><DownloadOutline /></n-icon> {{ resource.downloadCount || 0 }}
         </span>
       </div>
       <div class="card-tags" v-if="resource.tags && resource.tags.length">
-        <el-tag
+        <n-tag
           v-for="tag in (hover ? resource.tags.slice(0, 4) : resource.tags.slice(0, 3))"
           :key="tag.id"
           size="small"
           type="success"
-          effect="plain"
+          :bordered="false"
         >
           {{ tag.name }}
-        </el-tag>
+        </n-tag>
       </div>
     </div>
   </router-link>
@@ -56,6 +56,8 @@
 
 <script setup>
 import { ref } from 'vue'
+import { EyeOutline, DownloadOutline } from '@vicons/ionicons5'
+import { getTitleCover } from '@/utils/cover'
 
 const props = defineProps({
   resource: { type: Object, required: true }
@@ -63,10 +65,13 @@ const props = defineProps({
 
 const hover = ref(false)
 const coverLoaded = ref(false)
-const defaultCover = '/default-cover.svg'
+
+function defaultCover() {
+  return getTitleCover(props.resource.title, 400, 300)
+}
 
 function onError(e) {
-  e.target.src = defaultCover
+  e.target.src = defaultCover()
   coverLoaded.value = true
 }
 
@@ -230,9 +235,6 @@ function truncate(text, len) {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-}
-.card-tags :deep(.el-tag) {
-  transition: var(--transition-fast);
 }
 
 @media (max-width: 768px) {

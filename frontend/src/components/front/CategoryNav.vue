@@ -17,7 +17,7 @@
           :to="{ path: '/resources', query: { categoryId: section.id } }"
           class="category-more"
         >
-          更多 <el-icon><ArrowRight /></el-icon>
+          更多 <n-icon><ChevronForwardOutline /></n-icon>
         </router-link>
       </div>
       <div class="category-children" v-if="section.children && section.children.length">
@@ -33,12 +33,13 @@
     </div>
   </div>
   <div v-else-if="loading" class="category-loading">
-    <el-skeleton :rows="3" animated />
+    <n-skeleton text :repeat="3" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ChevronForwardOutline } from '@vicons/ionicons5'
 import { getCategoryTree } from '@/api/category'
 
 const categories = ref([])
@@ -138,6 +139,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 2px;
+  text-decoration: none;
   transition: var(--transition);
 }
 .category-more:hover {

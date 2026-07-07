@@ -24,6 +24,7 @@
 
     <!-- 分页查询资源（含分类名称） -->
     <select id="selectResourceWithCategory" resultMap="ResourceWithCategoryMap">
+        <bind name="tagCount" value="query.tagIds != null ? query.tagIds.size() : 0"/>
         SELECT r.*, c.name AS category_name
         FROM resource r
         LEFT JOIN category c ON r.category_id = c.id AND c.is_deleted = 0
@@ -42,8 +43,15 @@
             <if test="query.isRecommend != null">
                 AND r.is_recommend = #{query.isRecommend}
             </if>
-            <if test="query.tagId != null">
-                AND r.id IN (SELECT resource_id FROM resource_tag WHERE tag_id = #{query.tagId})
+            <if test="query.tagIds != null and query.tagIds.size() > 0">
+                AND r.id IN (
+                    SELECT resource_id FROM resource_tag WHERE tag_id IN
+                    <foreach collection="query.tagIds" item="tid" open="(" close=")" separator=",">
+                        #{tid}
+                    </foreach>
+                    GROUP BY resource_id
+                    HAVING COUNT(DISTINCT tag_id) = #{tagCount}
+                )
             </if>
         </where>
         <choose>

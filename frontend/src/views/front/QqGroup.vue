@@ -5,28 +5,20 @@
         <!-- Left: QR Code Card -->
         <div class="qr-card">
           <div class="qr-header">
-            <el-icon :size="22" style="color:#409eff"><Connection /></el-icon>
+            <n-icon :size="22" color="#409eff"><GitNetworkOutline /></n-icon>
             <span>扫码加群</span>
           </div>
           <div class="qr-image-wrapper">
-            <el-image
+            <img
               :src="qrSrc"
               alt="微信群二维码"
-              :preview-src-list="[qrSrc]"
-              :initial-index="0"
               fit="contain"
-              hide-on-click-modal
-              preview-teleported
               @load="onQrLoad"
               :class="['qr-image', { loaded: qrLoaded }]"
-              style="width:100%;height:100%"
-            >
-              <template #loading>
-                <div v-if="!qrLoaded" class="qr-placeholder" style="position:static;height:100%;min-height:200px">
-                  <el-icon :size="48" class="qr-loading-icon"><Loading /></el-icon>
-                </div>
-              </template>
-            </el-image>
+            />
+            <div v-if="!qrLoaded" class="qr-placeholder">
+              <div class="qr-loading-spinner"></div>
+            </div>
           </div>
           <div class="qr-footer">
             <p class="qr-tip">长按或扫描上方二维码加入微信群</p>
@@ -38,7 +30,7 @@
         <div class="group-info">
           <section class="info-section">
             <h2 class="info-title">
-              <el-icon :size="20"><InfoFilled /></el-icon>
+              <n-icon :size="20"><InformationCircleOutline /></n-icon>
               关于资料群
             </h2>
             <p class="info-text">
@@ -49,13 +41,13 @@
 
           <section class="info-section">
             <h2 class="info-title">
-              <el-icon :size="20"><Bell /></el-icon>
+              <n-icon :size="20"><NotificationsOutline /></n-icon>
               群内福利
             </h2>
             <div class="benefit-list">
               <div class="benefit-item" v-for="item in benefits" :key="item.title">
                 <div class="benefit-icon" :style="{ background: item.color }">
-                  <el-icon :size="20"><component :is="item.icon" /></el-icon>
+                  <n-icon :size="20"><component :is="iconMap[item.icon]" /></n-icon>
                 </div>
                 <div class="benefit-body">
                   <h3>{{ item.title }}</h3>
@@ -73,6 +65,19 @@
 
 <script setup>
 import { ref } from 'vue'
+import {
+  GitNetworkOutline,
+  InformationCircleOutline,
+  NotificationsOutline,
+  ChatbubbleEllipsesOutline,
+  DocumentTextOutline
+} from '@vicons/ionicons5'
+
+const iconMap = {
+  Bell: NotificationsOutline,
+  ChatLineSquare: ChatbubbleEllipsesOutline,
+  Document: DocumentTextOutline
+}
 
 const qrLoaded = ref(false)
 const qrSrc = ref(`/uploads/group-qrcode.png?t=${Date.now()}`)
@@ -182,12 +187,16 @@ const benefits = [
   pointer-events: none;
 }
 
-.qr-loading-icon {
-  color: var(--text-placeholder);
-  animation: spin 1s linear infinite;
+.qr-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: qrSpin 0.8s linear infinite;
 }
 
-@keyframes spin {
+@keyframes qrSpin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }

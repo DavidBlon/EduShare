@@ -54,28 +54,24 @@
       </div>
       <div class="banner-search" v-if="showSearch">
         <div class="search-glow"></div>
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索你需要的教育资源..."
-          size="large"
-          clearable
-          class="banner-input"
-          autocomplete="off"
-          name="search-input-home"
-          @keyup.enter="doSearch"
-        >
-          <template #prefix>
-            <el-icon class="search-prefix-icon"><Search /></el-icon>
-          </template>
-          <template #append>
-            <el-button @click="doSearch" class="banner-search-btn">
-              <el-icon class="btn-icon"><Search /></el-icon>
-              <span>搜索</span>
-            </el-button>
-          </template>
-        </el-input>
+        <div class="search-wrapper">
+          <n-input
+            v-model:value="searchKeyword"
+            placeholder=""
+            clearable
+            class="banner-input"
+            :name="'search-input-home'"
+            autocomplete="off"
+            @keyup.enter="doSearch"
+          >
+          </n-input>
+          <n-button @click="doSearch" class="banner-search-btn">
+            <template #icon>
+              <n-icon :size="20"><SearchOutline /></n-icon>
+            </template>
+          </n-button>
+        </div>
       </div>
-
     </div>
 
     <!-- Bottom wave divider -->
@@ -90,6 +86,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { SearchOutline } from '@vicons/ionicons5'
 
 const props = defineProps({
   title: { type: String, default: '小初学习资料圈' },
@@ -370,115 +367,73 @@ function sparkleDelay(i) {
   100% { opacity: 0.8; transform: scale(1.02); }
 }
 
-.banner-input {
+.search-wrapper {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: stretch;
+  border-radius: 50px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #409eff, #337ecc);
 }
 
-.banner-input :deep(.el-input__wrapper) {
-  border-radius: 50px 0 0 50px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+.banner-input {
+  flex: 1;
+}
+
+.banner-input :deep(.n-input-wrapper) {
+  border-radius: 0 !important;
   background: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(12px);
   padding-left: 24px !important;
   height: 56px;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border: none !important;
   transition: all 0.3s ease;
 }
-
-.banner-input :deep(.el-input__wrapper):hover {
+.banner-input :deep(.n-input-wrapper):hover {
   background: rgba(255, 255, 255, 0.97) !important;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
-
-.banner-input :deep(.el-input__wrapper.is-focus) {
+.banner-input :deep(.n-input--focus) .n-input-wrapper {
   background: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(102, 126, 234, 0.5) !important;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25), 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
 }
-
-.banner-input :deep(.el-input__inner) {
+.banner-input :deep(.n-input__input) {
   font-size: 16px;
   height: 56px;
+  line-height: 56px;
   color: #1a1a2e;
 }
-
-.banner-input :deep(.el-input__inner)::placeholder {
+.banner-input :deep(.n-input__input)::placeholder {
   color: rgba(26, 26, 46, 0.35);
-}
-
-/* Prefix icon */
-.search-prefix-icon {
-  color: rgba(26, 26, 46, 0.35);
-  font-size: 18px;
-}
-
-.banner-input :deep(.el-input-group__append) {
-  background: transparent;
-  border: none;
-  box-shadow: none !important;
-}
-
-.banner-input :deep(.el-input-group__prepend),
-.banner-input :deep(.el-input-group__append) {
-  box-shadow: none !important;
-}
-
-.banner-input :deep(.el-input-group) {
-  box-shadow: none;
-  border-radius: 50px;
 }
 
 /* Search Button */
 .banner-search-btn {
-  border-radius: 0 50px 50px 0 !important;
   height: 56px !important;
-  padding: 0 32px !important;
+  border-radius: 0 !important;
+  padding: 0 20px !important;
   font-size: 16px !important;
   background: linear-gradient(135deg, #409eff, #337ecc) !important;
   border: none !important;
+  border-left: none !important;
+  outline: none !important;
+  box-shadow: none !important;
   color: white !important;
   font-weight: 600;
   letter-spacing: 1px;
   transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  position: relative;
-  overflow: hidden;
 }
 
-.banner-search-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #337ecc, #409eff);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+.banner-search-btn :deep(.n-button__border) {
+  display: none !important;
 }
 
-.banner-search-btn:hover {
-  transform: scale(1.02);
+.banner-search-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, #337ecc, #409eff) !important;
   box-shadow: 0 4px 24px rgba(64, 158, 255, 0.4);
 }
-
-.banner-search-btn:hover::before {
-  opacity: 1;
-}
-
-.banner-search-btn:active {
+.banner-search-btn:not(:disabled):active {
   transform: scale(0.98);
-}
-
-.btn-icon {
-  font-size: 18px;
-}
-
-.banner-search-btn span,
-.banner-search-btn .btn-icon {
-  position: relative;
-  z-index: 1;
 }
 
 /* ====== Bottom Wave ====== */
@@ -523,18 +478,18 @@ function sparkleDelay(i) {
     font-size: 26px;
   }
 
-  .banner-input :deep(.el-input__wrapper) {
-    border-radius: 50px !important;
+  .banner-input :deep(.n-input-wrapper) {
     height: 48px;
   }
-
-  .banner-input :deep(.el-input__inner) {
+  .banner-input :deep(.n-input__input) {
     height: 48px;
     font-size: 15px;
   }
 
-  .banner-input :deep(.el-input-group__append) {
-    display: none;
+  .banner-search-btn {
+    height: 48px !important;
+    padding: 0 20px !important;
+    font-size: 15px !important;
   }
 
   .banner-search {

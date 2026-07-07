@@ -7,92 +7,92 @@
       </div>
     </div>
 
-    <el-card shadow="never">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" status-icon>
-        <el-collapse v-model="activeSections">
-          <!-- 章节 1 -->
-          <el-collapse-item title="章节一" name="1">
-            <el-form-item label="标题" prop="section1Title">
-              <el-input v-model="form.section1Title" placeholder="请输入章节标题" />
-            </el-form-item>
-            <el-form-item label="内容" prop="section1Content">
-              <el-input v-model="form.section1Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
-            </el-form-item>
-          </el-collapse-item>
+    <n-card :bordered="false">
+      <n-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-placement="left">
+        <n-collapse v-model:value="activeSections" display-directive="show">
+          <n-collapse-item title="章节一" name="1">
+            <n-form-item label="标题" path="section1Title">
+              <n-input v-model:value="form.section1Title" placeholder="请输入章节标题" />
+            </n-form-item>
+            <n-form-item label="内容" path="section1Content">
+              <n-input v-model:value="form.section1Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
+            </n-form-item>
+          </n-collapse-item>
 
-          <!-- 章节 2 -->
-          <el-collapse-item title="章节二" name="2">
-            <el-form-item label="标题" prop="section2Title">
-              <el-input v-model="form.section2Title" placeholder="请输入章节标题" />
-            </el-form-item>
-            <el-form-item label="内容" prop="section2Content">
-              <el-input v-model="form.section2Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
-            </el-form-item>
-          </el-collapse-item>
+          <n-collapse-item title="章节二" name="2">
+            <n-form-item label="标题" path="section2Title">
+              <n-input v-model:value="form.section2Title" placeholder="请输入章节标题" />
+            </n-form-item>
+            <n-form-item label="内容" path="section2Content">
+              <n-input v-model:value="form.section2Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
+            </n-form-item>
+          </n-collapse-item>
 
-          <!-- 章节 3 -->
-          <el-collapse-item title="章节三" name="3">
-            <el-form-item label="标题" prop="section3Title">
-              <el-input v-model="form.section3Title" placeholder="请输入章节标题" />
-            </el-form-item>
-            <el-form-item label="内容" prop="section3Content">
-              <el-input v-model="form.section3Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
-            </el-form-item>
-          </el-collapse-item>
+          <n-collapse-item title="章节三" name="3">
+            <n-form-item label="标题" path="section3Title">
+              <n-input v-model:value="form.section3Title" placeholder="请输入章节标题" />
+            </n-form-item>
+            <n-form-item label="内容" path="section3Content">
+              <n-input v-model:value="form.section3Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
+            </n-form-item>
+          </n-collapse-item>
 
-          <!-- 章节 4 -->
-          <el-collapse-item title="章节四" name="4">
-            <el-form-item label="标题" prop="section4Title">
-              <el-input v-model="form.section4Title" placeholder="请输入章节标题" />
-            </el-form-item>
-            <el-form-item label="内容" prop="section4Content">
-              <el-input v-model="form.section4Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
-            </el-form-item>
-          </el-collapse-item>
+          <n-collapse-item title="章节四" name="4">
+            <n-form-item label="标题" path="section4Title">
+              <n-input v-model:value="form.section4Title" placeholder="请输入章节标题" />
+            </n-form-item>
+            <n-form-item label="内容" path="section4Content">
+              <n-input v-model:value="form.section4Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
+            </n-form-item>
+          </n-collapse-item>
 
-          <!-- 章节 5 -->
-          <el-collapse-item title="章节五" name="5">
-            <el-form-item label="标题" prop="section5Title">
-              <el-input v-model="form.section5Title" placeholder="请输入章节标题" />
-            </el-form-item>
-            <el-form-item label="内容" prop="section5Content">
-              <el-input v-model="form.section5Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
-            </el-form-item>
-          </el-collapse-item>
-        </el-collapse>
+          <n-collapse-item title="章节五" name="5">
+            <n-form-item label="标题" path="section5Title">
+              <n-input v-model:value="form.section5Title" placeholder="请输入章节标题" />
+            </n-form-item>
+            <n-form-item label="内容" path="section5Content">
+              <n-input v-model:value="form.section5Content" type="textarea" :rows="3" placeholder="请输入章节内容" />
+            </n-form-item>
+          </n-collapse-item>
+        </n-collapse>
 
-        <el-divider />
+        <n-divider />
 
-        <el-form-item label="联系邮箱" prop="contactEmail">
-          <el-input v-model="form.contactEmail" placeholder="请输入侵权投诉联系邮箱">
-            <template #prefix><el-icon><Message /></el-icon></template>
-          </el-input>
-        </el-form-item>
+        <n-form-item label="联系邮箱" path="contactEmail">
+          <n-input v-model:value="form.contactEmail" placeholder="请输入侵权投诉联系邮箱">
+            <template #prefix>
+              <n-icon><ChatboxEllipsesOutline /></n-icon>
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item label="页脚声明" prop="briefDisclaimer">
-          <el-input v-model="form.briefDisclaimer" type="textarea" :rows="2" placeholder="请输入页脚显示的简短免责声明" />
-        </el-form-item>
+        <n-form-item label="页脚声明" path="briefDisclaimer">
+          <n-input v-model:value="form.briefDisclaimer" type="textarea" :rows="2" placeholder="请输入页脚显示的简短免责声明" />
+        </n-form-item>
 
-        <el-divider />
+        <n-divider />
 
-        <el-form-item>
+        <n-form-item>
           <div class="form-actions">
-            <el-button type="primary" :loading="submitting" @click="handleSubmit" size="large">
+            <n-button type="primary" :loading="submitting" @click="handleSubmit" size="large">
               保存设置
-            </el-button>
-            <el-button @click="handleReset" size="large">重置</el-button>
+            </n-button>
+            <n-button @click="handleReset" size="large">重置</n-button>
           </div>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        </n-form-item>
+      </n-form>
+    </n-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { useMessage, useDialog } from 'naive-ui'
+import { ChatboxEllipsesOutline } from '@vicons/ionicons5'
 import { getDisclaimer, updateDisclaimer } from '@/api/admin'
 
+const message = useMessage()
+const dialog = useDialog()
 const formRef = ref(null)
 const submitting = ref(false)
 const activeSections = ref(['1', '2', '3', '4', '5'])
@@ -138,19 +138,24 @@ onMounted(async () => {
 })
 
 function handleReset() {
-  ElMessageBox.confirm('重置将丢失所有未保存的更改，确定吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    location.reload()
-  }).catch(() => {})
+  dialog.warning({
+    title: '提示',
+    content: '重置将丢失所有未保存的更改，确定吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      location.reload()
+    }
+  })
 }
 
 async function handleSubmit() {
   if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
 
   submitting.value = true
   try {
@@ -168,7 +173,7 @@ async function handleSubmit() {
       contactEmail: form.contactEmail || null,
       briefDisclaimer: form.briefDisclaimer
     })
-    ElMessage.success('免责声明已更新')
+    message.success('免责声明已更新')
   } catch {
     // handled by interceptor
   } finally {
@@ -194,10 +199,5 @@ async function handleSubmit() {
 .form-actions {
   display: flex;
   gap: 12px;
-}
-
-:deep(.el-collapse-item__header) {
-  font-weight: 600;
-  font-size: 15px;
 }
 </style>

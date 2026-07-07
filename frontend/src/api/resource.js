@@ -10,9 +10,14 @@ export function getResourceDetail(id) {
   return request.get(`/api/front/resource/detail/${id}`)
 }
 
-// 前台：获取网盘信息
+// 前台：获取网盘信息（不记录下载）
 export function getNetdiskInfo(id) {
   return request.get(`/api/front/resource/netdisk/${id}`)
+}
+
+// 前台：确认下载（记录日志、增加下载量）
+export function confirmDownload(id) {
+  return request.post(`/api/front/resource/confirm-download/${id}`)
 }
 
 // 前台：推荐资源

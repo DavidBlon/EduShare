@@ -1,6 +1,8 @@
 import axios from 'axios'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { createDiscreteApi } from 'naive-ui'
 import router from '@/router'
+
+const { message } = createDiscreteApi(['message'])
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || '',
@@ -25,7 +27,7 @@ request.interceptors.response.use(
     const res = response.data
     // 后端统一返回 { code, msg, data }
     if (res.code && res.code !== 200) {
-      ElMessage.error(res.msg || '请求失败')
+      message.error(res.msg || '请求失败')
       if (res.code === 401) {
         localStorage.removeItem('adminToken')
         localStorage.removeItem('adminInfo')
@@ -42,16 +44,16 @@ request.interceptors.response.use(
         localStorage.removeItem('adminToken')
         localStorage.removeItem('adminInfo')
         router.push('/admin/login')
-        ElMessage.error('登录已过期，请重新登录')
+        message.error('登录已过期，请重新登录')
       } else if (status === 403) {
-        ElMessage.error('没有权限执行此操作')
+        message.error('没有权限执行此操作')
       } else if (status === 500) {
-        ElMessage.error('服务器错误，请稍后重试')
+        message.error('服务器错误，请稍后重试')
       } else {
-        ElMessage.error(error.response.data?.msg || '请求失败')
+        message.error(error.response.data?.msg || '请求失败')
       }
     } else {
-      ElMessage.error('网络错误，请检查网络连接')
+      message.error('网络错误，请检查网络连接')
     }
     return Promise.reject(error)
   }

@@ -37,9 +37,25 @@ git pull             # 拉取远程最新代码
 git stash pop        # 恢复本地修改
 ```
 
-> `git stash pop` 冲突时，手动编辑冲突文件后执行 `git add .` 标记解决。
+> **`git stash pop` 冲突时**：不要手动编辑冲突文件，按以下规则快速解决：
+> 
+> - **前端文件（`.vue`、`.js`、`.css` 等）**：用远程版本覆盖（本地前端修改已提交到 GitHub，不保留本地）
+>   ```bash
+>   git checkout origin/fix -- frontend/src/views/front/xxx.vue
+>   ```
+>   > 如果 `--theirs`/`--ours` 分不清哪个才是远程版本，直接用 `git checkout origin/fix -- <file>` 最保险。
+> - **`application.properties`**：保留服务器版本（数据库密码、配置不同）
+>   ```bash
+>   git checkout --ours src/main/resources/application.properties
+>   ```
+>   > 注意：rebase 场景下 `--ours` 和 `--theirs` 含义互换，哪个不行换另一个。
+> - **标记解决并提交**
+>   ```bash
+>   git add .
+>   git commit -m "fix: 解决合并冲突"
+>   ```
 
-### Step 2: 前端构建
+### Step 2: 前端构建（仅改前端时必须执行）
 
 ```bash
 cd frontend
@@ -47,6 +63,10 @@ npm install
 npm run build
 cd ..
 ```
+
+> ⚠️ **只 `nginx -s reload` 不会更新前端！** Nginx 分发的是 `dist/` 目录下的静态文件，必须 `npm run build` 重新生成 dist，Nginx 重载才会生效。
+>
+> 验证 dist 文件是否更新：`ls -la frontend/dist/assets/Home-*.js`
 
 ### Step 3: 后端打包
 
@@ -91,7 +111,10 @@ git push
 | 问题 | 解决 |
 |------|------|
 | 拉取提示本地文件将被覆盖 | `git stash` → `git pull` → `git stash pop` |
-| 前端打包后页面无变化 | 确认 dist 更新时间；必须执行 `mvn package` 并重启后端；`nginx -s reload` |
+| `git stash pop` 报冲突 | 前端文件 `checkout --theirs`，`application.properties` `checkout --ours`，然后 `git add .` + `git commit` |
+| 前端打包后页面无变化 | 先确认 `dist/` 文件是否更新（`ls -la frontend/dist/assets/Home-*.js`）；仅改前端时不需要 `mvn package`，但必须 `npm run build` |
+| 修改前端后只 `nginx -s reload` 没变化 | **必须先 `npm run build`**，Nginx 只分发 `dist/` 里的文件，不构建永远不会更新 |
+| `--theirs`/`--ours` 分不清哪个是远程 | 直接用 `git checkout origin/fix -- <file>` 拿远程版本 |
 | `git push` 报 `[rejected]` | `git pull` 合并远程代码后重推，禁止 `--force` |
 | 后端启动失败 | `journalctl -u edushare -f` 查看日志；检查 `upload/` 目录权限；确认 Jar 包存在 |
 

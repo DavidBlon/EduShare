@@ -4,9 +4,9 @@
       <div class="page-container">
         <div class="breadcrumb">
           <router-link to="/">首页</router-link>
-          <el-icon><ArrowRight /></el-icon>
+          <n-icon><ChevronForwardOutline /></n-icon>
           <router-link to="/announcements">平台公告</router-link>
-          <el-icon><ArrowRight /></el-icon>
+          <n-icon><ChevronForwardOutline /></n-icon>
           <span v-if="detail.title">{{ detail.title }}</span>
         </div>
       </div>
@@ -15,22 +15,25 @@
     <div class="page-container">
       <!-- Loading -->
       <div v-if="loading" class="content-card">
-        <el-skeleton :rows="10" animated />
+        <n-skeleton text :repeat="10" />
       </div>
 
       <!-- Detail -->
       <div v-else-if="detail.id" class="content-card">
         <h1 class="detail-title">{{ detail.title }}</h1>
         <div class="detail-meta">
-          <span><el-icon><User /></el-icon> {{ detail.adminName || '管理员' }}</span>
-          <span><el-icon><Clock /></el-icon> {{ detail.createdAt }}</span>
+          <span><n-icon><PersonOutline /></n-icon> {{ detail.adminName || '管理员' }}</span>
+          <span><n-icon><TimeOutline /></n-icon> {{ detail.createdAt }}</span>
         </div>
         <div class="detail-content" v-html="formatContent(detail.content)"></div>
       </div>
 
       <!-- Not found -->
-      <div v-else class="content-card empty">
-        <el-empty description="公告不存在" />
+      <div v-else class="content-card empty-card">
+        <div class="empty-inner">
+          <span class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+          <p>公告不存在</p>
+        </div>
       </div>
     </div>
   </div>
@@ -39,6 +42,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { ChevronForwardOutline, PersonOutline, TimeOutline } from '@vicons/ionicons5'
 import { getPublishedAnnouncementDetail } from '@/api/announcement'
 
 const route = useRoute()
@@ -102,10 +106,27 @@ function formatContent(content) {
   margin-top: 32px;
 }
 
-.content-card.empty {
+.content-card.empty-card {
   display: flex;
   justify-content: center;
   padding: 60px 20px;
+}
+
+.empty-inner {
+  text-align: center;
+}
+.empty-icon {
+  display: block;
+  margin-bottom: 8px;
+}
+.empty-icon svg {
+  display: block;
+  margin: 0 auto;
+}
+.empty-inner p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 .detail-title {

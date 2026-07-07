@@ -7,30 +7,31 @@
       </div>
     </div>
 
-    <el-card shadow="never" style="max-width:500px;">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="原密码" prop="oldPassword">
-          <el-input v-model="form.oldPassword" type="password" show-password placeholder="请输入原密码" />
-        </el-form-item>
-        <el-form-item label="新密码" prop="newPassword">
-          <el-input v-model="form.newPassword" type="password" show-password placeholder="请输入新密码" />
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input v-model="form.confirmPassword" type="password" show-password placeholder="请再次输入新密码" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :loading="submitting" @click="handleSubmit">确认修改</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <n-card :bordered="false" style="max-width:500px;">
+      <n-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-placement="left">
+        <n-form-item label="原密码" path="oldPassword">
+          <n-input v-model:value="form.oldPassword" type="password" show-password-on-click placeholder="请输入原密码" />
+        </n-form-item>
+        <n-form-item label="新密码" path="newPassword">
+          <n-input v-model:value="form.newPassword" type="password" show-password-on-click placeholder="请输入新密码" />
+        </n-form-item>
+        <n-form-item label="确认密码" path="confirmPassword">
+          <n-input v-model:value="form.confirmPassword" type="password" show-password-on-click placeholder="请再次输入新密码" />
+        </n-form-item>
+        <n-form-item>
+          <n-button type="primary" :loading="submitting" @click="handleSubmit">确认修改</n-button>
+        </n-form-item>
+      </n-form>
+    </n-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
+import { useMessage } from 'naive-ui'
 import { updatePassword } from '@/api/admin'
 
+const message = useMessage()
 const formRef = ref(null)
 const submitting = ref(false)
 
@@ -40,12 +41,11 @@ const form = reactive({
   confirmPassword: ''
 })
 
-const validateConfirm = (rule, value, callback) => {
+const validateConfirm = (rule, value) => {
   if (value !== form.newPassword) {
-    callback(new Error('两次输入的密码不一致'))
-  } else {
-    callback()
+    return new Error('两次输入的密码不一致')
   }
+  return true
 }
 
 const rules = {
@@ -62,8 +62,11 @@ const rules = {
 
 async function handleSubmit() {
   if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
 
   submitting.value = true
   try {
@@ -72,7 +75,7 @@ async function handleSubmit() {
       newPassword: form.newPassword,
       confirmPassword: form.confirmPassword
     })
-    ElMessage.success('密码修改成功')
+    message.success('密码修改成功')
     form.oldPassword = ''
     form.newPassword = ''
     form.confirmPassword = ''

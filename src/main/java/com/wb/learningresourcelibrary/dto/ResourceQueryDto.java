@@ -1,6 +1,7 @@
 package com.wb.learningresourcelibrary.dto;
 
 import lombok.Data;
+import java.util.List;
 
 /**
  * 资源查询参数 DTO
@@ -20,8 +21,8 @@ public class ResourceQueryDto {
     /** 关键词（搜索标题和描述） */
     private String keyword;
 
-    /** 标签ID */
-    private Long tagId;
+    /** 标签ID列表（支持多选） */
+    private List<Long> tagIds;
 
     /** 是否推荐 */
     private Integer isRecommend;

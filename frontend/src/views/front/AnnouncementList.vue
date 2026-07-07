@@ -10,12 +10,15 @@
     <div class="page-container">
       <!-- Loading -->
       <div v-if="loading" class="loading-wrap">
-        <el-skeleton :rows="5" animated />
+        <n-skeleton text :repeat="5" />
       </div>
 
       <!-- Empty -->
       <div v-else-if="!list.length" class="empty-wrap">
-        <el-empty description="暂无公告" />
+        <div class="empty-inner">
+          <span class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><line x1="19" y1="9" x2="23" y2="13"/><line x1="19" y1="13" x2="23" y2="9"/></svg></span>
+          <p class="empty-text">暂无公告</p>
+        </div>
       </div>
 
       <!-- Announcement List -->
@@ -28,35 +31,33 @@
           @click="$router.push(`/announcement/${item.id}`)"
         >
           <div class="card-badge">
-            <el-tag size="small" type="info" effect="dark" class="type-tag">公告</el-tag>
+            <n-tag size="small" type="info">公告</n-tag>
           </div>
           <div class="card-body">
             <h3 class="card-title">{{ item.title }}</h3>
             <p class="card-desc">{{ truncateContent(item.content) }}</p>
             <div class="card-footer">
               <span class="footer-author">
-                <el-icon><User /></el-icon>
+                <n-icon><PersonOutline /></n-icon>
                 {{ item.adminName || '管理员' }}
               </span>
               <span class="footer-time">
-                <el-icon><Clock /></el-icon>
+                <n-icon><TimeOutline /></n-icon>
                 {{ item.createdAt }}
               </span>
             </div>
           </div>
-          <el-icon class="card-arrow"><ArrowRight /></el-icon>
+          <n-icon class="card-arrow"><ChevronForwardOutline /></n-icon>
         </div>
       </div>
 
       <!-- Pagination -->
       <div v-if="total > pageSize" class="pagination-wrap">
-        <el-pagination
-          v-model:current-page="page"
+        <n-pagination
+          v-model:page="page"
           v-model:page-size="pageSize"
-          :total="total"
-          layout="prev, pager, next"
-          @current-change="fetchList"
-          background
+          :page-count="pageCount"
+          @update:page="fetchList"
         />
       </div>
     </div>
@@ -64,7 +65,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { PersonOutline, TimeOutline, ChevronForwardOutline } from '@vicons/ionicons5'
 import { getPublishedAnnouncementPage } from '@/api/announcement'
 
 const list = ref([])
@@ -72,6 +74,7 @@ const total = ref(0)
 const loading = ref(true)
 const page = ref(1)
 const pageSize = ref(10)
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 
 onMounted(() => fetchList())
 
@@ -129,6 +132,20 @@ function truncateContent(content) {
   padding: 60px 20px;
   box-shadow: var(--shadow);
   margin-top: 32px;
+  text-align: center;
+}
+.empty-icon {
+  display: block;
+  margin-bottom: 8px;
+}
+.empty-icon svg {
+  display: block;
+  margin: 0 auto;
+}
+.empty-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 .announcement-list {
@@ -165,10 +182,6 @@ function truncateContent(content) {
 
 .card-badge {
   flex-shrink: 0;
-}
-
-.type-tag {
-  border-radius: 4px;
 }
 
 .card-body {

@@ -23,7 +23,7 @@
         <div class="scope-grid">
           <div class="scope-card" v-for="item in scopeItems" :key="item.name">
             <div class="scope-icon" :style="{ background: item.color }">
-              <el-icon :size="28"><component :is="item.icon" /></el-icon>
+              <n-icon :size="28"><component :is="iconMap[item.icon]" /></n-icon>
             </div>
             <h3>{{ item.name }}</h3>
             <p>{{ item.desc }}</p>
@@ -34,19 +34,19 @@
       <section v-if="contactLoading || hasContact" class="about-section">
         <h2>联系我们</h2>
         <div v-if="contactLoading" class="contact-info">
-          <el-skeleton :rows="3" animated />
+          <n-skeleton text :repeat="3" />
         </div>
         <div v-else class="contact-info">
           <div v-if="contact.showEmail === 1 && contact.email" class="contact-item">
-            <el-icon><Message /></el-icon>
+            <n-icon><MailOutline /></n-icon>
             <span>邮箱：{{ contact.email }}</span>
           </div>
           <div v-if="contact.showPhone === 1 && contact.phone" class="contact-item">
-            <el-icon><Iphone /></el-icon>
+            <n-icon><PhonePortraitOutline /></n-icon>
             <span>电话：{{ contact.phone }}</span>
           </div>
           <div v-if="contact.showAddress === 1 && contact.address" class="contact-item">
-            <el-icon><Location /></el-icon>
+            <n-icon><LocationOutline /></n-icon>
             <span>地址：{{ contact.address }}</span>
           </div>
         </div>
@@ -62,8 +62,8 @@
         </div>
 
         <div class="disclaimer-contact">
-          <el-icon><Message /></el-icon>
-          <span>📧 侵权投诉/联系邮箱：<a :href="'mailto:' + disclaimer.contactEmail" class="disclaimer-email">{{ disclaimer.contactEmail || '请填写联系邮箱' }}</a></span>
+          <n-icon><MailOutline /></n-icon>
+          <span>侵权投诉/联系邮箱：<a :href="'mailto:' + disclaimer.contactEmail" class="disclaimer-email">{{ disclaimer.contactEmail || '请填写联系邮箱' }}</a></span>
         </div>
       </section>
     </div>
@@ -72,8 +72,26 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import {
+  MailOutline,
+  PhonePortraitOutline,
+  LocationOutline,
+  BookOutline,
+  SchoolOutline,
+  TrophyOutline,
+  TrendingUpOutline,
+  FlashOutline
+} from '@vicons/ionicons5'
 import { getPublicContact } from '@/api/contact'
 import { getPublicDisclaimer } from '@/api/disclaimer'
+
+const iconMap = {
+  Reading: BookOutline,
+  School: SchoolOutline,
+  Trophy: TrophyOutline,
+  TrendCharts: TrendingUpOutline,
+  Lightning: FlashOutline
+}
 
 const contact = ref({
   email: '',

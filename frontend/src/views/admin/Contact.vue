@@ -7,79 +7,75 @@
       </div>
     </div>
 
-    <el-card shadow="never" style="max-width:600px;">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" status-icon>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" placeholder="请输入邮箱地址">
-            <template #prefix><el-icon><Message /></el-icon></template>
-          </el-input>
-        </el-form-item>
-        <el-form-item label="显示邮箱">
-          <el-switch
-            v-model="form.showEmail"
-            :active-value="1"
-            :inactive-value="0"
-            active-text="显示"
-            inactive-text="隐藏"
-          />
-        </el-form-item>
+    <n-card :bordered="false" style="max-width:600px;">
+      <n-form ref="formRef" :model="form" :rules="rules" label-width="120px" label-placement="left">
+        <n-form-item label="邮箱" path="email">
+          <n-input v-model:value="form.email" placeholder="请输入邮箱地址">
+            <template #prefix>
+              <n-icon><ChatboxEllipsesOutline /></n-icon>
+            </template>
+          </n-input>
+        </n-form-item>
+        <n-form-item label="显示邮箱">
+          <n-switch v-model:value="form.showEmail" :checked-value="1" :unchecked-value="0">
+            <template #checked>显示</template>
+            <template #unchecked>隐藏</template>
+          </n-switch>
+        </n-form-item>
 
-        <el-divider />
+        <n-divider />
 
-        <el-form-item label="电话" prop="phone">
-          <el-input v-model="form.phone" placeholder="请输入联系电话">
-            <template #prefix><el-icon><Iphone /></el-icon></template>
-          </el-input>
-        </el-form-item>
-        <el-form-item label="显示电话">
-          <el-switch
-            v-model="form.showPhone"
-            :active-value="1"
-            :inactive-value="0"
-            active-text="显示"
-            inactive-text="隐藏"
-          />
-        </el-form-item>
+        <n-form-item label="电话" path="phone">
+          <n-input v-model:value="form.phone" placeholder="请输入联系电话">
+            <template #prefix>
+              <n-icon><PhonePortraitOutline /></n-icon>
+            </template>
+          </n-input>
+        </n-form-item>
+        <n-form-item label="显示电话">
+          <n-switch v-model:value="form.showPhone" :checked-value="1" :unchecked-value="0">
+            <template #checked>显示</template>
+            <template #unchecked>隐藏</template>
+          </n-switch>
+        </n-form-item>
 
-        <el-divider />
+        <n-divider />
 
-        <el-form-item label="地址" prop="address">
-          <el-input v-model="form.address" placeholder="请输入地址">
-            <template #prefix><el-icon><Location /></el-icon></template>
-          </el-input>
-        </el-form-item>
-        <el-form-item label="显示地址">
-          <el-switch
-            v-model="form.showAddress"
-            :active-value="1"
-            :inactive-value="0"
-            active-text="显示"
-            inactive-text="隐藏"
-          />
-        </el-form-item>
+        <n-form-item label="地址" path="address">
+          <n-input v-model:value="form.address" placeholder="请输入地址">
+            <template #prefix>
+              <n-icon><LocationOutline /></n-icon>
+            </template>
+          </n-input>
+        </n-form-item>
+        <n-form-item label="显示地址">
+          <n-switch v-model:value="form.showAddress" :checked-value="1" :unchecked-value="0">
+            <template #checked>显示</template>
+            <template #unchecked>隐藏</template>
+          </n-switch>
+        </n-form-item>
 
-        <el-divider />
+        <n-divider />
 
-        <el-form-item>
+        <n-form-item>
           <div class="form-actions">
-            <el-button type="primary" :loading="submitting" @click="handleSubmit" size="large">
+            <n-button type="primary" :loading="submitting" @click="handleSubmit" size="large">
               保存设置
-            </el-button>
-            <el-button @click="handleReset" size="large">重置</el-button>
+            </n-button>
+            <n-button @click="handleReset" size="large">重置</n-button>
           </div>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        </n-form-item>
+      </n-form>
+    </n-card>
 
-    <!-- 预览卡片 -->
-    <el-card shadow="never" style="max-width:600px;margin-top:20px;">
+    <n-card :bordered="false" style="max-width:600px;margin-top:20px;">
       <template #header>
-        <div class="card-header-title"><el-icon><View /></el-icon> 前台预览</div>
+        <div class="card-header-title"><n-icon><EyeOutline /></n-icon> 前台预览</div>
       </template>
       <div class="preview-list">
         <div v-if="form.showEmail === 1 && form.email" class="preview-item">
-          <div class="preview-icon" style="background:rgba(64,158,255,0.1);color:#409eff;">
-            <el-icon :size="18"><Message /></el-icon>
+          <div class="preview-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;">
+            <n-icon :size="18"><ChatboxEllipsesOutline /></n-icon>
           </div>
           <div class="preview-body">
             <span class="preview-label">邮箱</span>
@@ -87,8 +83,8 @@
           </div>
         </div>
         <div v-if="form.showPhone === 1 && form.phone" class="preview-item">
-          <div class="preview-icon" style="background:rgba(103,194,58,0.1);color:#67c23a;">
-            <el-icon :size="18"><Iphone /></el-icon>
+          <div class="preview-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">
+            <n-icon :size="18"><PhonePortraitOutline /></n-icon>
           </div>
           <div class="preview-body">
             <span class="preview-label">电话</span>
@@ -96,25 +92,28 @@
           </div>
         </div>
         <div v-if="form.showAddress === 1 && form.address" class="preview-item">
-          <div class="preview-icon" style="background:rgba(230,162,60,0.1);color:#e6a23c;">
-            <el-icon :size="18"><Location /></el-icon>
+          <div class="preview-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
+            <n-icon :size="18"><LocationOutline /></n-icon>
           </div>
           <div class="preview-body">
             <span class="preview-label">地址</span>
             <span class="preview-value">{{ form.address }}</span>
           </div>
         </div>
-        <el-empty v-if="!hasVisible" description="所有联系方式均已隐藏" :image-size="60" />
+        <n-empty v-if="!hasVisible" description="所有联系方式均已隐藏" />
       </div>
-    </el-card>
+    </n-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { useMessage, useDialog } from 'naive-ui'
+import { ChatboxEllipsesOutline, PhonePortraitOutline, LocationOutline, EyeOutline } from '@vicons/ionicons5'
 import { getContact, updateContact } from '@/api/admin'
 
+const message = useMessage()
+const dialog = useDialog()
 const formRef = ref(null)
 const submitting = ref(false)
 
@@ -153,19 +152,24 @@ onMounted(async () => {
 })
 
 function handleReset() {
-  ElMessageBox.confirm('重置将丢失所有未保存的更改，确定吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    location.reload()
-  }).catch(() => {})
+  dialog.warning({
+    title: '提示',
+    content: '重置将丢失所有未保存的更改，确定吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      location.reload()
+    }
+  })
 }
 
 async function handleSubmit() {
   if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
 
   submitting.value = true
   try {
@@ -177,7 +181,7 @@ async function handleSubmit() {
       showPhone: form.showPhone,
       showAddress: form.showAddress
     })
-    ElMessage.success('联系方式已更新')
+    message.success('联系方式已更新')
   } catch {
     // handled by interceptor
   } finally {

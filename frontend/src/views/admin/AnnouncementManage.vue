@@ -5,95 +5,65 @@
         <h2>公告管理</h2>
         <span class="header-desc">发布和管理平台公告</span>
       </div>
-      <el-button type="primary" @click="openAddDialog">
-        <el-icon><Plus /></el-icon> 发布公告
-      </el-button>
+      <n-button type="primary" @click="openAddDialog">
+        <template #icon><n-icon><AddOutline /></n-icon></template>
+        发布公告
+      </n-button>
     </div>
 
-    <!-- 公告列表 -->
-    <el-card shadow="never">
-      <el-table :data="list" v-loading="loading" stripe>
-        <el-table-column type="index" label="#" width="60" />
-        <el-table-column prop="title" label="公告标题" min-width="200">
-          <template #default="{ row }">
-            <span class="title-text">{{ row.title }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="adminName" label="发布人" width="120" />
-        <el-table-column prop="isPublished" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.isPublished === 1 ? 'success' : 'info'" size="small">
-              {{ row.isPublished === 1 ? '已发布' : '草稿' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="180" />
-        <el-table-column label="操作" width="260" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openEditDialog(row)">
-              编辑
-            </el-button>
-            <el-button
-              link
-              :type="row.isPublished === 1 ? 'warning' : 'success'"
-              size="small"
-              @click="handlePublish(row)"
-            >
-              {{ row.isPublished === 1 ? '撤回' : '发布' }}
-            </el-button>
-            <el-popconfirm title="确定删除此公告吗？" @confirm="handleDelete(row.id)">
-              <template #reference>
-                <el-button link type="danger" size="small">删除</el-button>
-              </template>
-            </el-popconfirm>
-          </template>
-        </el-table-column>
-      </el-table>
-
+    <n-card :bordered="false">
+      <n-data-table
+        :columns="columns"
+        :data="list"
+        :loading="loading"
+        :bordered="true"
+        :single-line="false"
+        size="small"
+      />
       <div class="pagination-wrap">
-        <el-pagination
-          v-model:current-page="query.page"
+        <n-pagination
+          v-model:page="query.page"
           v-model:page-size="query.pageSize"
-          :total="total"
-          layout="total, prev, pager, next"
-          @current-change="fetchList"
+          :page-count="pageCount"
+          :page-sizes="[10, 20, 50]"
+          show-size-picker
+          @update:page="fetchList"
+          @update:page-size="fetchList"
         />
       </div>
-    </el-card>
+    </n-card>
 
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑公告' : '发布公告'"
-      width="700px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
-        <el-form-item label="公告标题" prop="title">
-          <el-input v-model="form.title" placeholder="请输入公告标题" maxlength="100" show-word-limit />
-        </el-form-item>
-        <el-form-item label="公告内容" prop="content">
-          <el-input
-            v-model="form.content"
+    <n-modal v-model:show="dialogVisible" :title="isEdit ? '编辑公告' : '发布公告'" preset="card" style="width:700px" :bordered="false">
+      <n-form ref="formRef" :model="form" :rules="rules" label-placement="top">
+        <n-form-item label="公告标题" path="title">
+          <n-input v-model:value="form.title" placeholder="请输入公告标题" :maxlength="100" show-count />
+        </n-form-item>
+        <n-form-item label="公告内容" path="content">
+          <n-input
+            v-model:value="form.content"
             type="textarea"
             :rows="12"
             placeholder="请输入公告内容"
-            maxlength="5000"
-            show-word-limit
+            :maxlength="5000"
+            show-count
           />
-        </el-form-item>
-      </el-form>
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">保存</el-button>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <n-button @click="dialogVisible = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="submitForm">保存</n-button>
+        </div>
       </template>
-    </el-dialog>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, h, computed, onMounted } from 'vue'
+import { useMessage } from 'naive-ui'
+import { NTag, NButton, NPopconfirm } from 'naive-ui'
+import { AddOutline } from '@vicons/ionicons5'
 import {
   getAdminAnnouncementPage,
   addAnnouncement,
@@ -102,25 +72,64 @@ import {
   deleteAnnouncement
 } from '@/api/announcement'
 
+const message = useMessage()
 const list = ref([])
 const total = ref(0)
 const loading = ref(false)
 const query = reactive({ page: 1, pageSize: 10 })
-
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const submitting = ref(false)
 const formRef = ref(null)
 const form = reactive({ id: null, title: '', content: '' })
 
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)))
+
 const rules = {
   title: [{ required: true, message: '请输入公告标题', trigger: 'blur' }],
   content: [{ required: true, message: '请输入公告内容', trigger: 'blur' }]
 }
 
-onMounted(() => {
-  fetchList()
-})
+const columns = [
+  { title: '#', key: 'index', width: 60, align: 'center', render: (_, index) => index + 1 },
+  { title: '公告标题', key: 'title', minWidth: 200,
+    render: (row) => h('span', { class: 'title-text' }, row.title)
+  },
+  { title: '发布人', key: 'adminName', width: 120 },
+  { title: '状态', key: 'isPublished', width: 100,
+    render: (row) => h(NTag,
+      { type: row.isPublished === 1 ? 'success' : 'info', size: 'small' },
+      { default: () => row.isPublished === 1 ? '已发布' : '草稿' }
+    )
+  },
+  { title: '创建时间', key: 'createdAt', width: 180 },
+  { title: '操作', key: 'action', width: 260, fixed: 'right',
+    render: (row) => [
+      h(NButton, {
+        text: true, type: 'primary', size: 'small',
+        onClick: () => openEditDialog(row)
+      }, { default: () => '编辑' }),
+      h(NButton, {
+        text: true,
+        type: row.isPublished === 1 ? 'warning' : 'success',
+        size: 'small',
+        style: 'margin-left:8px',
+        onClick: () => handlePublish(row)
+      }, { default: () => row.isPublished === 1 ? '撤回' : '发布' }),
+      h(NPopconfirm, {
+        onPositiveClick: () => handleDelete(row.id)
+      }, {
+        trigger: () => h(NButton, {
+          text: true, type: 'error', size: 'small',
+          style: 'margin-left:8px'
+        }, { default: () => '删除' }),
+        default: () => '确定删除此公告吗？'
+      })
+    ]
+  }
+]
+
+onMounted(fetchList)
 
 async function fetchList() {
   loading.value = true
@@ -152,17 +161,19 @@ function openEditDialog(row) {
 }
 
 async function submitForm() {
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
-
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
   submitting.value = true
   try {
     if (isEdit.value) {
       await updateAnnouncement({ id: form.id, title: form.title, content: form.content })
-      ElMessage.success('更新成功')
+      message.success('更新成功')
     } else {
       await addAnnouncement({ title: form.title, content: form.content })
-      ElMessage.success('新增成功')
+      message.success('新增成功')
     }
     dialogVisible.value = false
     fetchList()
@@ -176,7 +187,7 @@ async function submitForm() {
 async function handlePublish(row) {
   try {
     await togglePublish(row.id, row.isPublished === 1 ? 0 : 1)
-    ElMessage.success(row.isPublished === 1 ? '已撤回' : '已发布')
+    message.success(row.isPublished === 1 ? '已撤回' : '已发布')
     fetchList()
   } catch {
     // handled by interceptor
@@ -186,7 +197,7 @@ async function handlePublish(row) {
 async function handleDelete(id) {
   try {
     await deleteAnnouncement(id)
-    ElMessage.success('删除成功')
+    message.success('删除成功')
     fetchList()
   } catch {
     // handled by interceptor

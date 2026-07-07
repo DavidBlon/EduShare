@@ -5,89 +5,64 @@
         <h2>管理员管理</h2>
         <span class="header-desc">管理系统管理员和普通管理员</span>
       </div>
-      <el-button type="primary" @click="openAdd">
-        <el-icon><Plus /></el-icon> 新增管理员
-      </el-button>
+      <n-button type="primary" @click="openAdd">
+        <template #icon><n-icon><AddOutline /></n-icon></template>
+        新增管理员
+      </n-button>
     </div>
 
-    <el-card shadow="never">
-      <el-table :data="admins" v-loading="loading" border stripe>
-        <el-table-column type="index" label="#" width="60" align="center" />
-        <el-table-column prop="username" label="用户名" min-width="120" />
-        <el-table-column prop="nickname" label="昵称" min-width="120" />
-        <el-table-column prop="role" label="角色" width="120" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.role === 0 ? 'danger' : 'primary'" effect="dark" size="small">
-              {{ row.role === 0 ? '系统管理员' : '普通管理员' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="80" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ row.status === 1 ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="200" fixed="right">
-          <template #default="{ row }">
-            <el-button text type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-            <el-popconfirm
-              v-if="row.role !== 0"
-              title="确定删除此管理员？"
-              @confirm="handleDelete(row.id)"
-            >
-              <template #reference>
-                <el-button text type="danger" size="small">删除</el-button>
-              </template>
-            </el-popconfirm>
-            <el-tag v-else size="small" type="info" effect="plain">不可删除</el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <n-card :bordered="false">
+      <n-data-table
+        :columns="columns"
+        :data="admins"
+        :loading="loading"
+        :bordered="true"
+        :single-line="false"
+        size="small"
+      />
+    </n-card>
 
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑管理员' : '新增管理员'" width="480px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名" :disabled="isEdit" />
-        </el-form-item>
-        <el-form-item label="密码" :prop="isEdit ? '' : 'password'">
-          <el-input
-            v-model="form.password"
+    <n-modal v-model:show="dialogVisible" :title="isEdit ? '编辑管理员' : '新增管理员'" preset="card" style="width:480px" :bordered="false">
+      <n-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-placement="left">
+        <n-form-item label="用户名" path="username">
+          <n-input v-model:value="form.username" placeholder="请输入用户名" :disabled="isEdit" />
+        </n-form-item>
+        <n-form-item label="密码" :path="isEdit ? undefined : 'password'">
+          <n-input
+            v-model:value="form.password"
             type="password"
-            show-password
+            show-password-on-click
             :placeholder="isEdit ? '留空则不修改密码' : '请输入密码'"
           />
-        </el-form-item>
-        <el-form-item label="昵称" prop="nickname">
-          <el-input v-model="form.nickname" placeholder="请输入昵称" />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-switch
-            v-model="form.status"
-            active-text="启用"
-            inactive-text="禁用"
-            :active-value="1"
-            :inactive-value="0"
-          />
-        </el-form-item>
-      </el-form>
+        </n-form-item>
+        <n-form-item label="昵称" path="nickname">
+          <n-input v-model:value="form.nickname" placeholder="请输入昵称" />
+        </n-form-item>
+        <n-form-item label="状态">
+          <n-switch v-model:value="form.status" :checked-value="1" :unchecked-value="0">
+            <template #checked>启用</template>
+            <template #unchecked>禁用</template>
+          </n-switch>
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <n-button @click="dialogVisible = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="handleSubmit">确定</n-button>
+        </div>
       </template>
-    </el-dialog>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, h, onMounted } from 'vue'
+import { useMessage } from 'naive-ui'
+import { NTag, NButton, NPopconfirm } from 'naive-ui'
+import { AddOutline } from '@vicons/ionicons5'
 import { getAdminList, addAdmin, updateAdmin, deleteAdmin } from '@/api/admin'
 
+const message = useMessage()
 const loading = ref(false)
 const admins = ref([])
 const dialogVisible = ref(false)
@@ -108,9 +83,50 @@ const rules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
-onMounted(() => {
-  fetchData()
-})
+const columns = [
+  { title: '#', key: 'index', width: 60, align: 'center', render: (_, index) => index + 1 },
+  { title: '用户名', key: 'username', minWidth: 120 },
+  { title: '昵称', key: 'nickname', minWidth: 120 },
+  { title: '角色', key: 'role', width: 120, align: 'center',
+    render: (row) => h(NTag,
+      { type: row.role === 0 ? 'error' : 'primary', size: 'small' },
+      { default: () => row.role === 0 ? '系统管理员' : '普通管理员' }
+    )
+  },
+  { title: '状态', key: 'status', width: 80, align: 'center',
+    render: (row) => h(NTag,
+      { type: row.status === 1 ? 'success' : 'error', size: 'small' },
+      { default: () => row.status === 1 ? '启用' : '禁用' }
+    )
+  },
+  { title: '创建时间', key: 'createdAt', width: 170 },
+  { title: '操作', key: 'action', width: 200, fixed: 'right',
+    render: (row) => {
+      const btns = [
+        h(NButton, {
+          text: true, type: 'primary', size: 'small',
+          onClick: () => openEdit(row)
+        }, { default: () => '编辑' })
+      ]
+      if (row.role !== 0) {
+        btns.push(h(NPopconfirm, {
+          onPositiveClick: () => handleDelete(row.id)
+        }, {
+          trigger: () => h(NButton, {
+            text: true, type: 'error', size: 'small',
+            style: 'margin-left:8px'
+          }, { default: () => '删除' }),
+          default: () => '确定删除此管理员？'
+        }))
+      } else {
+        btns.push(h(NTag, { size: 'small', type: 'info', style: 'margin-left:8px' }, { default: () => '不可删除' }))
+      }
+      return btns
+    }
+  }
+]
+
+onMounted(fetchData)
 
 async function fetchData() {
   loading.value = true
@@ -141,15 +157,18 @@ function openEdit(row) {
   form.password = ''
   form.nickname = row.nickname
   form.status = row.status
-  // 编辑时密码非必填
+  // Remove password requirement in edit mode
   rules.password = []
   dialogVisible.value = true
 }
 
 async function handleSubmit() {
   if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
 
   submitting.value = true
   try {
@@ -161,7 +180,7 @@ async function handleSubmit() {
         nickname: form.nickname,
         status: form.status
       })
-      ElMessage.success('更新成功')
+      message.success('更新成功')
     } else {
       await addAdmin({
         username: form.username,
@@ -169,7 +188,7 @@ async function handleSubmit() {
         nickname: form.nickname,
         status: form.status
       })
-      ElMessage.success('新增成功')
+      message.success('新增成功')
     }
     dialogVisible.value = false
     await fetchData()
@@ -184,7 +203,7 @@ async function handleSubmit() {
 async function handleDelete(id) {
   try {
     await deleteAdmin(id)
-    ElMessage.success('删除成功')
+    message.success('删除成功')
     await fetchData()
   } catch {
     // handled by interceptor

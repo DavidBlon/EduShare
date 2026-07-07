@@ -42,23 +42,28 @@ public class ResourceController {
     }
 
     /**
-     * 获取资源的网盘信息（同时记录下载日志）
+     * 获取资源的网盘信息（不再自动记录下载）
      */
     @GetMapping("/netdisk/{id}")
-    public Result<java.util.Map<String, String>> netdisk(@PathVariable Long id, HttpServletRequest request) {
+    public Result<java.util.Map<String, String>> netdisk(@PathVariable Long id) {
         Resource resource = resourceService.getResourceDetail(id);
         java.util.Map<String, String> result = new java.util.HashMap<>();
         result.put("title", resource.getTitle());
         result.put("netdiskLink", resource.getNetdiskLink());
         result.put("netdiskCode", resource.getNetdiskCode());
+        return Result.success(result);
+    }
 
-        // 记录下载日志（IP、资源信息、时间）
+    /**
+     * 用户确认下载（记录日志、增加下载量）
+     */
+    @PostMapping("/confirm-download/{id}")
+    public Result<Void> confirmDownload(@PathVariable Long id, HttpServletRequest request) {
+        Resource resource = resourceService.getResourceDetail(id);
         String ip = getClientIp(request);
         downloadLogService.recordLog(id, resource.getTitle(), ip);
-
-        // 增加下载量
         resourceService.incrementDownloadCount(id);
-        return Result.success(result);
+        return Result.success("下载确认成功");
     }
 
     /**

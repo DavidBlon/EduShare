@@ -5,193 +5,153 @@
         <h2>资源管理</h2>
         <span class="header-desc">管理所有资源</span>
       </div>
-      <el-button type="primary" @click="openAdd">
-        <el-icon><Plus /></el-icon> 新增资源
-      </el-button>
+      <n-button type="primary" @click="openAdd">
+        <template #icon><n-icon><AddOutline /></n-icon></template>
+        新增资源
+      </n-button>
     </div>
 
     <!-- Search Filters -->
-    <el-card shadow="never" class="filter-card">
-      <el-form :model="query" inline>
-        <el-form-item label="关键词">
-          <el-input v-model="query.keyword" placeholder="标题/简介" clearable style="width:200px;" />
-        </el-form-item>
-        <el-form-item label="分类">
-          <el-tree-select
-            v-model="query.categoryId"
-            :data="categoryTree"
-            :props="{ label: 'name', value: 'id' }"
+    <n-card :bordered="false" class="filter-card">
+      <div class="filter-row">
+        <n-form-item label="关键词">
+          <n-input v-model:value="query.keyword" placeholder="标题/简介" clearable style="width:200px;" />
+        </n-form-item>
+        <n-form-item label="分类">
+          <n-tree-select
+            v-model:value="query.categoryId"
+            :options="categoryTree"
+            :key-field="'id'"
+            :label-field="'name'"
+            :children-field="'children'"
             placeholder="全部分类"
             clearable
-            check-strictly
             style="width:180px;"
           />
-        </el-form-item>
-        <el-form-item label="排序">
-          <el-select v-model="query.sortBy" placeholder="默认" clearable style="width:120px;">
-            <el-option label="最新" value="new" />
-            <el-option label="热门" value="hot" />
-            <el-option label="推荐" value="recommend" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="loadResources">搜索</el-button>
-          <el-button @click="resetQuery">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        </n-form-item>
+        <n-form-item label="排序">
+          <n-select v-model:value="query.sortBy" placeholder="默认" clearable style="width:120px;"
+            :options="[
+              { label: '最新', value: 'new' },
+              { label: '热门', value: 'hot' },
+              { label: '推荐', value: 'recommend' }
+            ]"
+          />
+        </n-form-item>
+        <n-form-item>
+          <n-button type="primary" @click="loadResources">搜索</n-button>
+          <n-button style="margin-left:8px" @click="resetQuery">重置</n-button>
+        </n-form-item>
+      </div>
+    </n-card>
 
     <!-- Table -->
-    <el-card shadow="never">
-      <el-table :data="resources" v-loading="loading" border stripe style="width:100%">
-        <el-table-column type="index" label="#" width="55" align="center" />
-        <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
-        <el-table-column label="分类" width="120" align="center">
-          <template #default="{ row }">
-            <el-tag size="small" effect="plain">{{ row.categoryName || '—' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" width="80" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
-              {{ row.status === 1 ? '发布' : '草稿' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="推荐" width="70" align="center">
-          <template #default="{ row }">
-            <el-switch
-              :model-value="row.isRecommend === 1"
-              :loading="row._recommendLoading"
-              size="small"
-              @click.stop
-              @change="handleToggleRecommend(row)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column prop="viewCount" label="浏览" width="70" align="center" />
-        <el-table-column prop="downloadCount" label="下载" width="70" align="center" />
-        <el-table-column label="标签" width="180">
-          <template #default="{ row }">
-            <template v-if="row.tags && row.tags.length">
-              <el-tag v-for="t in row.tags.slice(0, 3)" :key="t.id" size="small" type="success" effect="plain" style="margin:1px 2px;">
-                {{ t.name }}
-              </el-tag>
-            </template>
-            <span v-else style="color:#c0c4cc;">—</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="160" />
-        <el-table-column label="操作" width="160" fixed="right">
-          <template #default="{ row }">
-            <el-button text type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除此资源？" @confirm="handleDelete(row.id)">
-              <template #reference>
-                <el-button text type="danger" size="small">删除</el-button>
-              </template>
-            </el-popconfirm>
-          </template>
-        </el-table-column>
-      </el-table>
-
+    <n-card :bordered="false">
+      <n-data-table
+        :columns="columns"
+        :data="resources"
+        :loading="loading"
+        :bordered="true"
+        :single-line="false"
+        size="small"
+      />
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="query.page"
+        <n-pagination
+          v-model:page="query.page"
           v-model:page-size="query.pageSize"
-          :total="total"
-          layout="total, sizes, prev, pager, next"
-          @current-change="loadResources"
-          @size-change="loadResources"
+          :page-count="pageCount"
+          :page-sizes="[10, 20, 50]"
+          show-size-picker
+          show-quick-jumper
+          @update:page="loadResources"
+          @update:page-size="loadResources"
         />
       </div>
-    </el-card>
+    </n-card>
 
     <!-- Add/Edit Dialog -->
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑资源' : '新增资源'" width="700px" :close-on-click-modal="false">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="资源标题" prop="title">
-          <el-input v-model="form.title" placeholder="请输入资源标题" />
-        </el-form-item>
-        <el-form-item label="所属分类" prop="categoryId">
-          <el-tree-select
-            v-model="form.categoryId"
-            :data="categoryTree"
-            :props="{ label: 'name', value: 'id' }"
+    <n-modal v-model:show="dialogVisible" :title="isEdit ? '编辑资源' : '新增资源'" preset="card" style="width:700px" :bordered="false">
+      <n-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-placement="left">
+        <n-form-item label="资源标题" path="title">
+          <n-input v-model:value="form.title" placeholder="请输入资源标题" />
+        </n-form-item>
+        <n-form-item label="所属分类" path="categoryId">
+          <n-tree-select
+            v-model:value="form.categoryId"
+            :options="categoryTree"
+            :key-field="'id'"
+            :label-field="'name'"
+            :children-field="'children'"
             placeholder="请选择分类"
-            check-strictly
             style="width:100%"
           />
-        </el-form-item>
-        <el-form-item label="封面图片">
+        </n-form-item>
+        <n-form-item label="封面图片">
           <div class="cover-upload">
-            <el-upload
-              :show-file-list="false"
-              :http-request="handleUpload"
+            <n-upload
+              :default-upload="false"
               accept="image/*"
+              :max="1"
+              @before-upload="onBeforeUpload"
             >
               <img v-if="form.cover" :src="form.cover" class="cover-preview" />
               <div v-else class="cover-placeholder">
-                <el-icon><Plus /></el-icon>
+                <n-icon><AddOutline /></n-icon>
                 <span>上传封面</span>
               </div>
-            </el-upload>
-            <el-button v-if="form.cover" text type="danger" size="small" @click="form.cover = ''">移除</el-button>
+            </n-upload>
+            <n-button v-if="form.cover" text type="error" size="small" @click="form.cover = ''">移除</n-button>
           </div>
-        </el-form-item>
-        <el-form-item label="标签">
-          <el-select v-model="form.tagIds" multiple placeholder="选择标签" style="width:100%">
-            <el-option v-for="tag in allTags" :key="tag.id" :label="tag.name" :value="tag.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="网盘链接">
-          <el-input v-model="form.netdiskLink" placeholder="百度网盘分享链接" />
-        </el-form-item>
-        <el-form-item label="提取码">
-          <el-input v-model="form.netdiskCode" placeholder="百度网盘提取码" style="width:200px;" />
-        </el-form-item>
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="排序">
-              <el-input-number v-model="form.sort" :min="0" :max="999" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="状态">
-              <el-select v-model="form.status" style="width:100%">
-                <el-option :value="1" label="发布" />
-                <el-option :value="0" label="草稿" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="推荐">
-              <el-select v-model="form.isRecommend" style="width:100%">
-                <el-option :value="1" label="推荐" />
-                <el-option :value="0" label="普通" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="资源简介">
-          <el-input v-model="form.description" type="textarea" :rows="4" placeholder="资源详细描述" />
-        </el-form-item>
-      </el-form>
+        </n-form-item>
+        <n-form-item label="标签">
+          <n-select v-model:value="form.tagIds" multiple placeholder="选择标签" :options="allTags.map(t => ({ label: t.name, value: t.id }))" />
+        </n-form-item>
+        <n-form-item label="网盘链接">
+          <n-input v-model:value="form.netdiskLink" placeholder="百度网盘分享链接" />
+        </n-form-item>
+        <n-form-item label="提取码">
+          <n-input v-model:value="form.netdiskCode" placeholder="百度网盘提取码" style="width:200px;" />
+        </n-form-item>
+        <div style="display:flex;gap:20px;">
+          <n-form-item label="排序">
+            <n-input-number v-model:value="form.sort" :min="0" :max="999" />
+          </n-form-item>
+          <n-form-item label="状态">
+            <n-select v-model:value="form.status" style="width:120px;"
+              :options="[{ label: '发布', value: 1 }, { label: '草稿', value: 0 }]"
+            />
+          </n-form-item>
+          <n-form-item label="推荐">
+            <n-select v-model:value="form.isRecommend" style="width:120px;"
+              :options="[{ label: '推荐', value: 1 }, { label: '普通', value: 0 }]"
+            />
+          </n-form-item>
+        </div>
+        <n-form-item label="资源简介">
+          <n-input v-model:value="form.description" type="textarea" :rows="4" placeholder="资源详细描述" />
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <n-button @click="dialogVisible = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="handleSubmit">确定</n-button>
+        </div>
       </template>
-    </el-dialog>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, h, computed, onMounted, nextTick } from 'vue'
+import { useMessage } from 'naive-ui'
+import { NTag, NButton, NPopconfirm, NSwitch } from 'naive-ui'
+import { AddOutline } from '@vicons/ionicons5'
 import { getAdminResourcePage, getAdminResourceDetail, addResource, updateResource, deleteResource, toggleRecommend } from '@/api/resource'
 import { getAllCategories } from '@/api/category'
 import { getAdminTagList } from '@/api/tag'
 import { uploadCover } from '@/api/upload'
 
+const message = useMessage()
 const loading = ref(false)
 const resources = ref([])
 const total = ref(0)
@@ -200,9 +160,8 @@ const isEdit = ref(false)
 const submitting = ref(false)
 const formRef = ref(null)
 const allTags = ref([])
-
-// Category tree
 const categoryTree = ref([])
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)))
 
 const query = reactive({
   page: 1,
@@ -230,17 +189,65 @@ const form = reactive(defaultForm())
 
 const rules = {
   title: [{ required: true, message: '请输入资源标题', trigger: 'blur' }],
-  categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }]
+  categoryId: [{ required: true, message: '请选择分类' }]
 }
 
+const columns = [
+  { title: '#', key: 'index', width: 55, align: 'center', render: (_, index) => index + 1 },
+  { title: '标题', key: 'title', minWidth: 200, ellipsis: { tooltip: true } },
+  { title: '分类', key: 'categoryName', width: 120, align: 'center',
+    render: (row) => h(NTag, { size: 'small' }, { default: () => row.categoryName || '—' })
+  },
+  { title: '状态', key: 'status', width: 80, align: 'center',
+    render: (row) => h(NTag,
+      { type: row.status === 1 ? 'success' : 'info', size: 'small' },
+      { default: () => row.status === 1 ? '发布' : '草稿' }
+    )
+  },
+  { title: '推荐', key: 'isRecommend', width: 70, align: 'center',
+    render: (row) => h(NSwitch, {
+      value: row.isRecommend === 1,
+      loading: row._recommendLoading,
+      loading: row._recommendLoading,
+      'onUpdate:value': () => handleToggleRecommend(row)
+    })
+  },
+  { title: '浏览', key: 'viewCount', width: 70, align: 'center' },
+  { title: '下载', key: 'downloadCount', width: 70, align: 'center' },
+  { title: '标签', key: 'tags', width: 180,
+    render: (row) => {
+      if (row.tags && row.tags.length) {
+        return row.tags.slice(0, 3).map(t => h(NTag, { size: 'small', type: 'success', style: 'margin:1px 2px' }, { default: () => t.name }))
+      }
+      return h('span', { style: 'color:#c0c4cc' }, '—')
+    }
+  },
+  { title: '创建时间', key: 'createdAt', width: 160 },
+  { title: '操作', key: 'action', width: 160, fixed: 'right',
+    render: (row) => [
+      h(NButton, {
+        text: true, type: 'primary', size: 'small',
+        onClick: () => openEdit(row)
+      }, { default: () => '编辑' }),
+      h(NPopconfirm, {
+        onPositiveClick: () => handleDelete(row.id)
+      }, {
+        trigger: () => h(NButton, {
+          text: true, type: 'error', size: 'small',
+          style: 'margin-left:8px'
+        }, { default: () => '删除' }),
+        default: () => '确定删除此资源？'
+      })
+    ]
+  }
+]
+
 onMounted(async () => {
-  // Load categories and tags
   const [catRes, tagRes] = await Promise.all([
     getAllCategories(),
     getAdminTagList()
   ])
 
-  // Build tree
   const flat = catRes.data || []
   const tree = []
   const map = {}
@@ -254,7 +261,6 @@ onMounted(async () => {
   })
   categoryTree.value = tree
   allTags.value = tagRes.data || []
-
   loadResources()
 })
 
@@ -287,15 +293,13 @@ function openAdd() {
   isEdit.value = false
   Object.assign(form, defaultForm())
   dialogVisible.value = true
-  nextTick(() => formRef.value?.clearValidate())
+  nextTick(() => formRef.value?.restoreValidation())
 }
 
 async function openEdit(row) {
   isEdit.value = true
   Object.assign(form, defaultForm())
   form.id = row.id
-
-  // Load full detail
   try {
     const res = await getAdminResourceDetail(row.id)
     const d = res.data
@@ -310,17 +314,23 @@ async function openEdit(row) {
     form.sort = d.sort || 0
     form.tagIds = (d.tags || []).map(t => t.id)
     dialogVisible.value = true
-    nextTick(() => formRef.value?.clearValidate())
+    nextTick(() => formRef.value?.restoreValidation())
   } catch {
-    ElMessage.error('获取资源详情失败')
+    message.error('获取资源详情失败')
   }
 }
 
-async function handleUpload(uploadOption) {
+function onBeforeUpload({ file }) {
+  const rawFile = file?.file
+  if (rawFile) handleUpload(rawFile)
+  return false // 不让 n-upload 加入内部列表，避免 :max=1 阻塞后续选择
+}
+
+async function handleUpload(file) {
   try {
-    const res = await uploadCover(uploadOption.file)
+    const res = await uploadCover(file)
     form.cover = res.data.url
-    ElMessage.success('封面上传成功')
+    message.success('封面上传成功')
   } catch {
     // handled by interceptor
   }
@@ -328,9 +338,11 @@ async function handleUpload(uploadOption) {
 
 async function handleSubmit() {
   if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
-
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
   submitting.value = true
   try {
     const data = {
@@ -345,14 +357,13 @@ async function handleSubmit() {
       sort: form.sort,
       tagIds: form.tagIds
     }
-
     if (isEdit.value) {
       data.id = form.id
       await updateResource(data)
-      ElMessage.success('更新成功')
+      message.success('更新成功')
     } else {
       await addResource(data)
-      ElMessage.success('新增成功')
+      message.success('新增成功')
     }
     dialogVisible.value = false
     await loadResources()
@@ -366,7 +377,7 @@ async function handleSubmit() {
 async function handleDelete(id) {
   try {
     await deleteResource(id)
-    ElMessage.success('删除成功')
+    message.success('删除成功')
     await loadResources()
   } catch {
     // handled
@@ -378,7 +389,7 @@ async function handleToggleRecommend(row) {
   try {
     await toggleRecommend(row.id)
     row.isRecommend = row.isRecommend === 1 ? 0 : 1
-    ElMessage.success(row.isRecommend === 1 ? '已设为推荐' : '已取消推荐')
+    message.success(row.isRecommend === 1 ? '已设为推荐' : '已取消推荐')
   } catch {
     // handled
   } finally {
@@ -403,6 +414,12 @@ async function handleToggleRecommend(row) {
 
 .filter-card {
   margin-bottom: 20px;
+}
+.filter-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .pagination-wrapper {

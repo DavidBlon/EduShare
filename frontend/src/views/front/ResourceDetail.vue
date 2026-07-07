@@ -3,28 +3,37 @@
     <div class="page-container">
       <!-- Loading -->
       <div v-if="loading" class="loading-area">
-        <el-skeleton :rows="8" animated />
+        <n-skeleton text :repeat="8" />
       </div>
 
       <!-- Error -->
-      <el-empty v-else-if="error" :description="error">
-        <el-button type="primary" @click="$router.back()">返回上一页</el-button>
-      </el-empty>
+      <div v-else-if="error" class="empty-area">
+        <div class="empty-inner">
+          <span class="empty-icon"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="9" x2="8.01" y2="9" stroke-width="2"/><line x1="16" y1="9" x2="16.01" y2="9" stroke-width="2"/><line x1="9" y1="16" x2="15" y2="16"/></svg></span>
+          <p>{{ error }}</p>
+          <n-button @click="$router.back()" class="empty-btn">返回上一页</n-button>
+        </div>
+      </div>
 
       <!-- Content -->
       <template v-else-if="resource">
         <div class="detail-top">
           <!-- Breadcrumb -->
-          <el-breadcrumb separator="/" class="detail-breadcrumb">
-            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-            <el-breadcrumb-item :to="{ path: '/resources' }">资源库</el-breadcrumb-item>
-            <el-breadcrumb-item>{{ resource.title }}</el-breadcrumb-item>
-          </el-breadcrumb>
+          <n-breadcrumb class="detail-breadcrumb">
+            <n-breadcrumb-item>
+              <router-link to="/">首页</router-link>
+            </n-breadcrumb-item>
+            <n-breadcrumb-item>
+              <router-link to="/resources">资源库</router-link>
+            </n-breadcrumb-item>
+            <n-breadcrumb-item>{{ resource.title }}</n-breadcrumb-item>
+          </n-breadcrumb>
 
           <!-- Back button -->
-          <el-button text class="back-btn" @click="$router.back()">
-            <el-icon><ArrowLeft /></el-icon> 返回
-          </el-button>
+          <n-button quaternary class="back-btn" @click="$router.back()">
+            <template #icon><n-icon><ArrowBackOutline /></n-icon></template>
+            返回
+          </n-button>
         </div>
 
         <div class="detail-wrapper">
@@ -34,46 +43,44 @@
               <h1 class="detail-title">{{ resource.title }}</h1>
               <div class="detail-meta">
                 <span v-if="resource.categoryName">
-                  <el-tag effect="plain" color="#e8f4ff" class="detail-cat-tag">
+                  <n-tag :bordered="false" color="#e8f4ff" class="detail-cat-tag">
                     {{ resource.categoryName }}
-                  </el-tag>
+                  </n-tag>
                 </span>
                 <span class="meta-stat">
-                  <el-icon><View /></el-icon> {{ resource.viewCount || 0 }} 次浏览
+                  <n-icon><EyeOutline /></n-icon> {{ resource.viewCount || 0 }} 次浏览
                 </span>
                 <span class="meta-stat">
-                  <el-icon><Download /></el-icon> {{ resource.downloadCount || 0 }} 次下载
+                  <n-icon><DownloadOutline /></n-icon> {{ resource.downloadCount || 0 }} 次下载
                 </span>
                 <span class="meta-date">
-                  <el-icon><Clock /></el-icon> {{ formatDate(resource.createdAt) }}
+                  <n-icon><TimeOutline /></n-icon> {{ formatDate(resource.createdAt) }}
                 </span>
               </div>
             </div>
 
             <!-- Cover -->
-            <div class="detail-cover" v-if="resource.cover">
-              <el-image
-                :src="resource.cover"
+            <div class="detail-cover">
+              <img
+                :src="resource.cover || getTitleCover(resource.title, 800, 400)"
                 :alt="resource.title"
-                fit="contain"
-                lazy
-                :preview-src-list="[resource.cover]"
                 class="detail-image"
+                @error="e => e.target.src = getTitleCover(resource.title, 800, 400)"
               />
             </div>
 
             <!-- Tags -->
             <div class="detail-tags" v-if="resource.tags && resource.tags.length">
               <span class="tag-label">标签：</span>
-              <el-tag
+              <n-tag
                 v-for="tag in resource.tags"
                 :key="tag.id"
                 type="success"
-                effect="plain"
+                :bordered="false"
                 class="detail-tag"
               >
                 {{ tag.name }}
-              </el-tag>
+              </n-tag>
             </div>
 
             <!-- Description -->
@@ -85,11 +92,13 @@
 
           <!-- Sidebar -->
           <aside class="detail-sidebar">
-            <el-card shadow="never" class="sidebar-card">
-              <div class="sidebar-card-header">
-                <el-icon><Link /></el-icon>
-                <span>网盘信息</span>
-              </div>
+            <n-card :bordered="false" class="sidebar-card">
+              <template #header>
+                <div class="sidebar-card-header">
+                  <n-icon><LinkOutline /></n-icon>
+                  <span>网盘信息</span>
+                </div>
+              </template>
 
               <div class="netdisk-card">
                 <div class="netdisk-field" v-if="netdiskInfo.netdiskLink">
@@ -100,61 +109,57 @@
                   <label>提取码</label>
                   <div class="field-value code-value">
                     <span class="code-text">{{ showCode ? netdiskInfo.netdiskCode : '****' }}</span>
-                    <el-button
-                      text
+                    <n-button
+                      quaternary
                       type="primary"
                       size="small"
                       @click="showCode = !showCode"
                       class="toggle-code"
                     >
                       {{ showCode ? '隐藏' : '显示' }}
-                    </el-button>
+                    </n-button>
                   </div>
                 </div>
 
-                <el-divider class="netdisk-divider" />
+                <n-divider class="netdisk-divider" />
 
                 <div class="netdisk-actions">
                   <template v-if="!netdiskInfo.netdiskLink">
-                    <el-button
+                    <n-button
                       type="primary"
                       size="large"
                       class="action-btn primary-btn"
                       @click="getNetdisk"
                       :loading="netdiskLoading"
                     >
-                      <el-icon><Link /></el-icon>
+                      <template #icon><n-icon><LinkOutline /></n-icon></template>
                       查看网盘信息
-                    </el-button>
+                    </n-button>
                     <p class="netdisk-tip">点击查看网盘链接和提取码</p>
                   </template>
 
                   <template v-else>
-                    <el-button type="primary" size="large" class="action-btn primary-btn" @click="copyLink">
-                      <el-icon><CopyDocument /></el-icon>
+                    <n-button type="primary" size="large" class="action-btn primary-btn" @click="copyLink">
+                      <template #icon><n-icon><CopyOutline /></n-icon></template>
                       {{ linkCopied ? '已复制' : '复制链接' }}
-                    </el-button>
-                    <el-button size="large" class="action-btn" @click="copyCode">
-                      <el-icon><CopyDocument /></el-icon>
+                    </n-button>
+                    <n-button size="large" class="action-btn" @click="copyCode">
+                      <template #icon><n-icon><CopyOutline /></n-icon></template>
                       {{ codeCopied ? '已复制' : '复制提取码' }}
-                    </el-button>
+                    </n-button>
+                    <n-button
+                      size="large"
+                      class="action-btn download-confirm-btn"
+                      @click="handleConfirmDownload"
+                      :loading="downloading"
+                    >
+                      <template #icon><n-icon><DownloadOutline /></n-icon></template>
+                      跳转网盘
+                    </n-button>
                   </template>
                 </div>
               </div>
-            </el-card>
-
-            <!-- Share -->
-            <el-card shadow="never" class="sidebar-card share-card">
-              <div class="sidebar-card-header">
-                <el-icon><Share /></el-icon>
-                <span>分享</span>
-              </div>
-              <div class="share-actions">
-                <el-button text @click="copyCurrentUrl">
-                  <el-icon><Link /></el-icon> 复制链接
-                </el-button>
-              </div>
-            </el-card>
+            </n-card>
           </aside>
         </div>
       </template>
@@ -165,9 +170,19 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getResourceDetail, getNetdiskInfo } from '@/api/resource'
-import { ElMessage } from 'element-plus'
+import { useMessage } from 'naive-ui'
+import {
+  ArrowBackOutline,
+  EyeOutline,
+  DownloadOutline,
+  TimeOutline,
+  LinkOutline,
+  CopyOutline
+} from '@vicons/ionicons5'
+import { getResourceDetail, getNetdiskInfo, confirmDownload } from '@/api/resource'
+import { getTitleCover } from '@/utils/cover'
 
+const message = useMessage()
 const route = useRoute()
 const resource = ref(null)
 const loading = ref(true)
@@ -209,14 +224,32 @@ async function getNetdisk() {
     const res = await getNetdiskInfo(route.params.id)
     netdiskInfo.netdiskLink = res.data.netdiskLink
     netdiskInfo.netdiskCode = res.data.netdiskCode
-    // Refresh to update download count
-    const detailRes = await getResourceDetail(route.params.id)
-    resource.value = detailRes.data
-    ElMessage.success('网盘信息已获取')
+    message.success('网盘信息已获取')
   } catch {
-    ElMessage.error('获取网盘信息失败')
+    message.error('获取网盘信息失败')
   } finally {
     netdiskLoading.value = false
+  }
+}
+
+const downloading = ref(false)
+
+async function handleConfirmDownload() {
+  downloading.value = true
+  try {
+    await confirmDownload(route.params.id)
+    // 刷新详情更新下载量显示
+    const detailRes = await getResourceDetail(route.params.id)
+    resource.value = detailRes.data
+    message.success('下载已确认')
+    // 跳转到网盘链接
+    if (netdiskInfo.netdiskLink) {
+      window.open(netdiskInfo.netdiskLink, '_blank')
+    }
+  } catch {
+    message.error('确认失败')
+  } finally {
+    downloading.value = false
   }
 }
 
@@ -245,10 +278,10 @@ async function copyLink() {
   try {
     await copyToClipboard(netdiskInfo.netdiskLink)
     linkCopied.value = true
-    ElMessage.success('链接已复制')
+    message.success('链接已复制')
     setTimeout(() => { linkCopied.value = false }, 2000)
   } catch {
-    ElMessage.error('复制失败，请手动复制')
+    message.error('复制失败，请手动复制')
   }
 }
 
@@ -256,19 +289,10 @@ async function copyCode() {
   try {
     await copyToClipboard(netdiskInfo.netdiskCode)
     codeCopied.value = true
-    ElMessage.success('提取码已复制')
+    message.success('提取码已复制')
     setTimeout(() => { codeCopied.value = false }, 2000)
   } catch {
-    ElMessage.error('复制失败，请手动复制')
-  }
-}
-
-async function copyCurrentUrl() {
-  try {
-    await copyToClipboard(window.location.href)
-    ElMessage.success('链接已复制到剪贴板')
-  } catch {
-    ElMessage.error('复制失败')
+    message.error('复制失败，请手动复制')
   }
 }
 
@@ -336,7 +360,7 @@ function formatDate(date) {
   flex-wrap: wrap;
 }
 
-.detail-cat-tag :deep(.el-tag__content) {
+.detail-cat-tag {
   color: var(--primary);
   font-weight: 500;
 }
@@ -368,6 +392,7 @@ function formatDate(date) {
   max-height: 400px;
   width: 100%;
   border-radius: 8px;
+  object-fit: contain;
 }
 
 .detail-tags {
@@ -439,9 +464,6 @@ function formatDate(date) {
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
-.sidebar-card :deep(.el-card__body) {
-  padding: 0;
-}
 
 .sidebar-card-header {
   display: flex;
@@ -450,8 +472,6 @@ function formatDate(date) {
   font-weight: 600;
   font-size: 15px;
   color: var(--text-primary);
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--border-light);
   background: linear-gradient(135deg, #f7f8fa, #f0f2f5);
 }
 
@@ -525,6 +545,12 @@ function formatDate(date) {
   font-weight: 600;
 }
 
+.download-confirm-btn {
+  border: 1px dashed var(--primary);
+  color: var(--primary);
+  background: var(--primary-bg);
+}
+
 .netdisk-tip {
   font-size: 12px;
   color: var(--text-placeholder);
@@ -532,14 +558,40 @@ function formatDate(date) {
   text-align: center;
 }
 
-/* Share card */
-.share-card .share-actions {
-  padding: 16px 20px;
+/* Empty area */
+.empty-area {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
 }
-.share-actions .el-button {
-  width: 100%;
-  justify-content: flex-start;
-  font-size: 14px;
+.empty-inner {
+  text-align: center;
+}
+.empty-icon {
+  display: block;
+  margin-bottom: 12px;
+}
+.empty-icon svg {
+  display: block;
+  margin: 0 auto;
+}
+.empty-area p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+.empty-btn {
+  border-radius: 8px;
+}
+
+/* Loading */
+.loading-area {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: var(--shadow);
 }
 
 @keyframes fadeInUp {

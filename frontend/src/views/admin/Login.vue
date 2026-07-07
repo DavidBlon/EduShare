@@ -34,47 +34,53 @@
         <p class="login-subtitle">管理后台 · 教育资源共享平台</p>
       </div>
 
-      <el-form
+      <n-form
         ref="formRef"
         :model="form"
         :rules="rules"
-        size="large"
+        :show-label="false"
         class="login-form"
         @keyup.enter="handleLogin"
       >
-        <el-form-item prop="username">
-          <el-input
-            v-model="form.username"
+        <n-form-item path="username">
+          <n-input
+            v-model:value="form.username"
             placeholder="用户名"
-            :prefix-icon="User"
-          />
-        </el-form-item>
+          >
+            <template #prefix>
+              <n-icon><PersonOutline /></n-icon>
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item prop="password">
-          <el-input
-            v-model="form.password"
+        <n-form-item path="password">
+          <n-input
+            v-model:value="form.password"
             type="password"
             placeholder="密码"
-            :prefix-icon="Lock"
-            show-password
-          />
-        </el-form-item>
+            show-password-on-click
+          >
+            <template #prefix>
+              <n-icon><LockClosedOutline /></n-icon>
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item>
-          <el-button
+        <n-form-item>
+          <n-button
             type="primary"
             :loading="loading"
             class="login-btn"
             @click="handleLogin"
           >
             {{ loading ? '登录中...' : '登 录' }}
-          </el-button>
-        </el-form-item>
-      </el-form>
+          </n-button>
+        </n-form-item>
+      </n-form>
 
       <div class="login-footer">
         <router-link to="/" class="back-link">
-          <el-icon><ArrowLeft /></el-icon> 返回前台
+          <n-icon><ArrowBackOutline /></n-icon> 返回前台
         </router-link>
       </div>
     </div>
@@ -84,11 +90,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Lock } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { useMessage } from 'naive-ui'
+import { PersonOutline, LockClosedOutline, ArrowBackOutline } from '@vicons/ionicons5'
 import { login } from '@/api/admin'
 
 const router = useRouter()
+const message = useMessage()
 const formRef = ref(null)
 const loading = ref(false)
 
@@ -104,8 +111,11 @@ const rules = {
 
 async function handleLogin() {
   if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
 
   loading.value = true
   try {
@@ -119,7 +129,7 @@ async function handleLogin() {
       avatar: data.avatar,
       role: data.role
     }))
-    ElMessage.success('登录成功')
+    message.success('登录成功')
     router.push('/admin/dashboard')
   } catch {
     // handled by interceptor
@@ -158,7 +168,7 @@ async function handleLogin() {
 .orb-1 {
   width: 700px;
   height: 700px;
-  background: radial-gradient(circle, #409eff, transparent);
+  background: radial-gradient(circle, #6366f1, transparent);
   top: -200px;
   right: -200px;
   animation-delay: 0s;
@@ -167,7 +177,7 @@ async function handleLogin() {
 .orb-2 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, #7c3aed, transparent);
+  background: radial-gradient(circle, #8b5cf6, transparent);
   bottom: -150px;
   left: -150px;
   animation-delay: -5s;
@@ -176,7 +186,7 @@ async function handleLogin() {
 .orb-3 {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, #06b6d4, transparent);
+  background: radial-gradient(circle, #a78bfa, transparent);
   top: 50%;
   left: 60%;
   transform: translate(-50%, -50%);
@@ -254,7 +264,7 @@ async function handleLogin() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
 }
 .login-logo-circle img {
   width: 100%;
@@ -281,21 +291,7 @@ async function handleLogin() {
   margin-bottom: 8px;
 }
 
-.login-form :deep(.el-input__wrapper) {
-  border-radius: 10px;
-  padding: 4px 16px;
-  box-shadow: 0 0 0 1px var(--border) inset !important;
-  transition: all 0.25s ease;
-}
-.login-form :deep(.el-input__wrapper):hover {
-  box-shadow: 0 0 0 1px var(--border-darker) inset !important;
-}
-.login-form :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) inset !important;
-  border-color: var(--primary);
-}
-
-.login-form :deep(.el-form-item) {
+.login-form :deep(.n-form-item) {
   margin-bottom: 22px;
 }
 
@@ -307,11 +303,10 @@ async function handleLogin() {
   letter-spacing: 3px;
   border-radius: 10px;
   margin-top: 4px;
-  transition: var(--transition);
 }
 .login-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
 }
 
 /* ====== Footer ====== */

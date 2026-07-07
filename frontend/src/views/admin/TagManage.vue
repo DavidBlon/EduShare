@@ -5,67 +5,56 @@
         <h2>标签管理</h2>
         <span class="header-desc">管理资源标签</span>
       </div>
-      <el-button type="primary" @click="openAdd">
-        <el-icon><Plus /></el-icon> 新增标签
-      </el-button>
+      <n-button type="primary" @click="openAdd">
+        <template #icon><n-icon><AddOutline /></n-icon></template>
+        新增标签
+      </n-button>
     </div>
 
-    <el-card shadow="never">
-      <el-table :data="tags" v-loading="loading" border stripe>
-        <el-table-column type="index" label="#" width="60" align="center" />
-        <el-table-column prop="name" label="标签名称" min-width="160" />
-        <el-table-column prop="sort" label="排序" width="80" align="center" />
-        <el-table-column prop="resourceCount" label="资源数量" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag round>{{ row.resourceCount || 0 }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="80" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ row.status === 1 ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="160" fixed="right">
-          <template #default="{ row }">
-            <el-button text type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除此标签？" @confirm="handleDelete(row.id)">
-              <template #reference>
-                <el-button text type="danger" size="small">删除</el-button>
-              </template>
-            </el-popconfirm>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <n-card :bordered="false">
+      <n-data-table
+        :columns="columns"
+        :data="tags"
+        :loading="loading"
+        :bordered="true"
+        :single-line="false"
+        size="small"
+      />
+    </n-card>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑标签' : '新增标签'" width="450px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="标签名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入标签名称" />
-        </el-form-item>
-        <el-form-item label="排序号">
-          <el-input-number v-model="form.sort" :min="0" :max="999" />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-switch v-model="form.statusStr" active-text="启用" inactive-text="禁用" :active-value="1" :inactive-value="0" />
-        </el-form-item>
-      </el-form>
+    <n-modal v-model:show="dialogVisible" :title="isEdit ? '编辑标签' : '新增标签'" preset="card" style="width:450px" :bordered="false">
+      <n-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-placement="left">
+        <n-form-item label="标签名称" path="name">
+          <n-input v-model:value="form.name" placeholder="请输入标签名称" />
+        </n-form-item>
+        <n-form-item label="排序号">
+          <n-input-number v-model:value="form.sort" :min="0" :max="999" />
+        </n-form-item>
+        <n-form-item label="状态">
+          <n-switch v-model:value="form.statusStr" :checked-value="1" :unchecked-value="0">
+            <template #checked>启用</template>
+            <template #unchecked>禁用</template>
+          </n-switch>
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <n-button @click="dialogVisible = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="handleSubmit">确定</n-button>
+        </div>
       </template>
-    </el-dialog>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, h, onMounted } from 'vue'
+import { useMessage } from 'naive-ui'
+import { NTag, NButton, NPopconfirm } from 'naive-ui'
+import { AddOutline } from '@vicons/ionicons5'
 import { getAdminTagList, addTag, updateTag, deleteTag } from '@/api/tag'
 
+const message = useMessage()
 const loading = ref(false)
 const tags = ref([])
 const dialogVisible = ref(false)
@@ -83,6 +72,41 @@ const form = reactive({
 const rules = {
   name: [{ required: true, message: '请输入标签名称', trigger: 'blur' }]
 }
+
+const columns = [
+  { title: '#', key: 'index', width: 60, align: 'center',
+    render: (_, index) => index + 1
+  },
+  { title: '标签名称', key: 'name', minWidth: 160 },
+  { title: '排序', key: 'sort', width: 80, align: 'center' },
+  { title: '资源数量', key: 'resourceCount', width: 100, align: 'center',
+    render: (row) => h(NTag, { round: true }, { default: () => row.resourceCount || 0 })
+  },
+  { title: '状态', key: 'status', width: 80, align: 'center',
+    render: (row) => h(NTag,
+      { type: row.status === 1 ? 'success' : 'error', size: 'small' },
+      { default: () => row.status === 1 ? '启用' : '禁用' }
+    )
+  },
+  { title: '创建时间', key: 'createdAt', width: 170 },
+  { title: '操作', key: 'action', width: 160, fixed: 'right',
+    render: (row) => [
+      h(NButton, {
+        text: true, type: 'primary', size: 'small',
+        onClick: () => openEdit(row)
+      }, { default: () => '编辑' }),
+      ' ',
+      h(NPopconfirm, {
+        onPositiveClick: () => handleDelete(row.id)
+      }, {
+        trigger: () => h(NButton, {
+          text: true, type: 'error', size: 'small'
+        }, { default: () => '删除' }),
+        default: () => '确定删除此标签？'
+      })
+    ]
+  }
+]
 
 onMounted(loadTags)
 
@@ -118,18 +142,21 @@ function openEdit(row) {
 
 async function handleSubmit() {
   if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
   submitting.value = true
   try {
     const data = { name: form.name, sort: form.sort, status: form.statusStr }
     if (isEdit.value) {
       data.id = form.id
       await updateTag(data)
-      ElMessage.success('更新成功')
+      message.success('更新成功')
     } else {
       await addTag(data)
-      ElMessage.success('新增成功')
+      message.success('新增成功')
     }
     dialogVisible.value = false
     await loadTags()
@@ -143,7 +170,7 @@ async function handleSubmit() {
 async function handleDelete(id) {
   try {
     await deleteTag(id)
-    ElMessage.success('删除成功')
+    message.success('删除成功')
     await loadTags()
   } catch {
     // handled

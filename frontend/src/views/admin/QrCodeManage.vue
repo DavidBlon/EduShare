@@ -8,48 +8,44 @@
     </div>
 
     <div class="qrcode-layout">
-      <!-- 上传区域 -->
-      <el-card shadow="never" class="upload-card">
+      <n-card :bordered="false" class="upload-card">
         <template #header>
           <span>上传新二维码</span>
         </template>
 
-        <el-upload
+        <n-upload
           ref="uploadRef"
-          drag
           accept="image/jpeg,image/png,image/gif,image/webp"
-          :auto-upload="false"
-          :limit="1"
-          :on-change="onFileChange"
-          :on-exceed="onExceed"
-          class="upload-area"
+          :default-upload="false"
+          :max="1"
+          @change="onFileChange"
         >
-          <el-icon class="upload-icon" :size="48"><Plus /></el-icon>
-          <div class="upload-text">
-            <span>将二维码图片拖拽到此处，或 <em>点击选择</em></span>
-          </div>
-          <template #tip>
-            <div class="upload-tip">
-              支持 jpg/png/gif/webp 格式，建议使用正方形图片
+          <n-upload-dragger>
+            <div style="margin-bottom: 8px;">
+              <n-icon :size="48" color="var(--text-placeholder)"><AddOutline /></n-icon>
             </div>
-          </template>
-        </el-upload>
+            <div class="upload-text">
+              <span>将二维码图片拖拽到此处，或 <em>点击选择</em></span>
+            </div>
+          </n-upload-dragger>
+        </n-upload>
+        <div class="upload-tip">支持 jpg/png/gif/webp 格式，建议使用正方形图片</div>
 
         <div v-if="previewUrl" class="preview-row">
           <div class="preview-img-wrapper">
             <img :src="previewUrl" alt="预览" class="preview-img" />
           </div>
           <div class="preview-actions">
-            <el-button type="primary" :loading="uploading" @click="handleUpload" size="large">
-              <el-icon><Upload /></el-icon> 确认上传
-            </el-button>
-            <el-button @click="handleClear" :disabled="uploading" size="large">取消</el-button>
+            <n-button type="primary" :loading="uploading" @click="handleUpload" size="large">
+              <template #icon><n-icon><CloudUploadOutline /></n-icon></template>
+              确认上传
+            </n-button>
+            <n-button @click="handleClear" :disabled="uploading" size="large">取消</n-button>
           </div>
         </div>
-      </el-card>
+      </n-card>
 
-      <!-- 当前二维码预览 -->
-      <el-card shadow="never" class="current-card">
+      <n-card :bordered="false" class="current-card">
         <template #header>
           <span>当前前台展示</span>
         </template>
@@ -63,41 +59,38 @@
         </div>
         <p class="current-path">路径：/uploads/group-qrcode.png</p>
         <p class="current-hint">
-          <el-icon><InfoFilled /></el-icon>
+          <n-icon><InformationCircleOutline /></n-icon>
           上传新图片后将立即覆盖，前台自动生效
         </p>
-      </el-card>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { useMessage } from 'naive-ui'
+import { AddOutline, CloudUploadOutline, InformationCircleOutline } from '@vicons/ionicons5'
 import { uploadQrCode } from '@/api/upload'
 
+const message = useMessage()
 const currentQrSrc = ref(`/uploads/group-qrcode.png?t=${Date.now()}`)
 const uploadRef = ref(null)
 const uploading = ref(false)
 const previewUrl = ref('')
 const selectedFile = ref(null)
 
-function onFileChange(uploadFile) {
-  const rawFile = uploadFile.raw
+function onFileChange({ file }) {
+  const rawFile = file?.file || file
   if (!rawFile) return
 
-  // 校验文件类型
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   if (!validTypes.includes(rawFile.type)) {
-    ElMessage.warning('仅支持 jpg/png/gif/webp 格式的图片')
-    uploadRef.value?.clearFiles()
+    message.warning('仅支持 jpg/png/gif/webp 格式的图片')
     return
   }
-
-  // 校验文件大小（10MB）
   if (rawFile.size > 10 * 1024 * 1024) {
-    ElMessage.warning('文件大小不能超过 10MB')
-    uploadRef.value?.clearFiles()
+    message.warning('文件大小不能超过 10MB')
     return
   }
 
@@ -105,25 +98,19 @@ function onFileChange(uploadFile) {
   previewUrl.value = URL.createObjectURL(rawFile)
 }
 
-function onExceed() {
-  ElMessage.warning('每次只能上传一张图片')
-}
-
 function handleClear() {
   previewUrl.value = ''
   selectedFile.value = null
-  uploadRef.value?.clearFiles()
+  uploadRef.value?.clear()
 }
 
 async function handleUpload() {
   if (!selectedFile.value) return
-
   uploading.value = true
   try {
     await uploadQrCode(selectedFile.value)
-    ElMessage.success('二维码更新成功！前台页面已自动生效')
+    message.success('二维码更新成功！前台页面已自动生效')
     handleClear()
-    // 刷新预览，加时间戳防止浏览器缓存旧图
     currentQrSrc.value = `/uploads/group-qrcode.png?t=${Date.now()}`
   } catch {
     // handled by interceptor
@@ -133,7 +120,7 @@ async function handleUpload() {
 }
 
 function onCurrentError() {
-  // 首次部署时可能还没有上传过二维码，静默处理
+  // silently handle missing image
 }
 </script>
 
@@ -153,20 +140,6 @@ function onCurrentError() {
   grid-template-columns: 1fr 320px;
   gap: 24px;
   align-items: start;
-}
-
-/* ====== Upload Card ====== */
-.upload-card :deep(.el-card__body) {
-  padding: 24px;
-}
-
-.upload-area {
-  width: 100%;
-}
-
-.upload-icon {
-  color: var(--text-placeholder);
-  margin-bottom: 8px;
 }
 
 .upload-text {
@@ -216,12 +189,6 @@ function onCurrentError() {
   padding-top: 8px;
 }
 
-/* ====== Current Card ====== */
-.current-card :deep(.el-card__body) {
-  padding: 24px;
-  text-align: center;
-}
-
 .current-qr-wrapper {
   width: 200px;
   height: 200px;
@@ -253,25 +220,21 @@ function onCurrentError() {
   color: var(--text-secondary);
   margin: 0;
   padding: 8px 12px;
-  background: rgba(64, 158, 255, 0.06);
+  background: rgba(99, 102, 241, 0.06);
   border-radius: var(--radius);
 }
 
-/* ====== Responsive ====== */
 @media (max-width: 768px) {
   .qrcode-layout {
     grid-template-columns: 1fr;
   }
-
   .preview-row {
     flex-direction: column;
     align-items: center;
   }
-
   .preview-actions {
     flex-direction: row;
   }
-
   .current-qr-wrapper {
     width: 160px;
     height: 160px;

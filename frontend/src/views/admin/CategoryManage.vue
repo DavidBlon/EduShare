@@ -1,99 +1,78 @@
 <template>
   <div class="category-manage">
-    <!-- Header -->
     <div class="page-header">
       <div class="header-left">
         <h2>分类管理</h2>
         <span class="header-desc">管理资源分类结构</span>
       </div>
-      <el-button type="primary" @click="openAdd">
-        <el-icon><Plus /></el-icon> 新增一级分类
-      </el-button>
+      <n-button type="primary" @click="openAdd">
+        <template #icon><n-icon><AddOutline /></n-icon></template>
+        新增一级分类
+      </n-button>
     </div>
 
-    <!-- Table -->
-    <el-card shadow="never">
-      <el-table ref="tableRef" :data="categories" row-key="id" :tree-props="{ children: 'children' }" v-loading="loading" border>
-        <el-table-column prop="name" label="分类名称" min-width="160" />
-        <el-table-column prop="level" label="层级" width="120" align="center">
-          <template #default="{ row }">
-            <el-tag :type="levelTagType(row.level)" effect="plain" size="small">
-              {{ levelLabel(row.level) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="sort" label="排序" width="80" align="center" />
-        <el-table-column prop="status" label="状态" width="80" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ row.status === 1 ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="280" fixed="right">
-          <template #default="{ row }">
-            <el-button text type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除此分类？" @confirm="handleDelete(row.id)">
-              <template #reference>
-                <el-button text type="danger" size="small">删除</el-button>
-              </template>
-            </el-popconfirm>
-            <el-button text type="primary" size="small" @click="openAddChild(row)">添加子分类</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <n-card :bordered="false">
+      <n-data-table
+        ref="tableRef"
+        :columns="columns"
+        :data="categories"
+        :loading="loading"
+        :bordered="true"
+        :single-line="false"
+        children-key="children"
+      />
+    </n-card>
 
-    <!-- Dialog -->
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : '新增分类'" width="500px" :close-on-click-modal="false">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="分类名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入分类名称" />
-        </el-form-item>
-        <el-form-item label="父级分类">
-          <el-tree-select
-            v-model="form.parentId"
-            :data="categoryTree"
-            :props="{ label: 'name', value: 'id', disabled: (d) => isEdit && d.id === form.id }"
+    <n-modal v-model:show="dialogVisible" :title="isEdit ? '编辑分类' : '新增分类'" preset="card" style="width:500px" :bordered="false">
+      <n-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-placement="left">
+        <n-form-item label="分类名称" path="name">
+          <n-input v-model:value="form.name" placeholder="请输入分类名称" />
+        </n-form-item>
+        <n-form-item label="父级分类">
+          <n-tree-select
+            v-model:value="form.parentId"
+            :options="categoryTree"
+            :key-field="'id'"
+            :label-field="'name'"
+            :children-field="'children'"
             placeholder="不选则为顶级分类"
-            check-strictly
             clearable
-            style="width:100%"
           />
-        </el-form-item>
-        <el-form-item label="排序号">
-          <el-input-number v-model="form.sort" :min="0" :max="999" />
-        </el-form-item>
-        <el-form-item label="层级" prop="level">
-          <el-select v-model="form.level" placeholder="请选择层级" style="width:100%">
-            <el-option :value="1" label="小学" />
-            <el-option :value="2" label="初中" />
-            <el-option :value="3" label="高中" />
-            <el-option :value="4" label="中考" />
-            <el-option :value="5" label="高考" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-switch v-model="form.statusStr" active-text="启用" inactive-text="禁用" :active-value="1" :inactive-value="0" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="可选" />
-        </el-form-item>
-      </el-form>
+        </n-form-item>
+        <n-form-item label="排序号">
+          <n-input-number v-model:value="form.sort" :min="0" :max="999" />
+        </n-form-item>
+        <n-form-item label="层级" path="level">
+          <n-select v-model:value="form.level" placeholder="请选择层级" :options="levelOptions" />
+        </n-form-item>
+        <n-form-item label="状态">
+          <n-switch v-model:value="form.statusStr" :checked-value="1" :unchecked-value="0">
+            <template #checked>启用</template>
+            <template #unchecked>禁用</template>
+          </n-switch>
+        </n-form-item>
+        <n-form-item label="描述">
+          <n-input v-model:value="form.description" type="textarea" :rows="3" placeholder="可选" />
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <n-button @click="dialogVisible = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="handleSubmit">确定</n-button>
+        </div>
       </template>
-    </el-dialog>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, h, onMounted, computed, nextTick } from 'vue'
+import { useMessage } from 'naive-ui'
+import { NTag, NButton, NPopconfirm } from 'naive-ui'
+import { AddOutline } from '@vicons/ionicons5'
 import { getAllCategories, addCategory, updateCategory, deleteCategory } from '@/api/category'
 
+const message = useMessage()
 const loading = ref(false)
 const categories = ref([])
 const dialogVisible = ref(false)
@@ -118,39 +97,78 @@ const rules = {
   name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }]
 }
 
-// Build tree for tree-select
-const categoryTree = computed(() => {
-  const build = (list) => {
-    return list.map(c => ({
-      ...c,
-      id: c.id,
-      name: c.name,
-      children: c.children ? build(c.children) : undefined
-    }))
-  }
-  return build(categories.value)
-})
+const levelOptions = [
+  { label: '小学', value: 1 },
+  { label: '初中', value: 2 },
+  { label: '高中', value: 3 },
+  { label: '中考', value: 4 },
+  { label: '高考', value: 5 }
+]
 
-function levelLabel(level) {
+const levelLabel = (level) => {
   const map = { 1: '小学', 2: '初中', 3: '高中', 4: '中考', 5: '高考' }
   return map[level] || `Level ${level}`
 }
 
-function levelTagType(level) {
-  const map = { 1: '', 2: 'success', 3: 'warning', 4: 'danger', 5: 'info' }
-  return map[level] || ''
+const levelTagType = (level) => {
+  const map = { 1: 'default', 2: 'success', 3: 'warning', 4: 'error', 5: 'info' }
+  return map[level] || 'default'
 }
+
+const columns = [
+  { title: '分类名称', key: 'name', minWidth: 160, tree: true },
+  { title: '层级', key: 'level', width: 120, align: 'center',
+    render: (row) => h(NTag,
+      { type: levelTagType(row.level), size: 'small' },
+      { default: () => levelLabel(row.level) }
+    )
+  },
+  { title: '排序', key: 'sort', width: 80, align: 'center' },
+  { title: '状态', key: 'status', width: 80, align: 'center',
+    render: (row) => h(NTag,
+      { type: row.status === 1 ? 'success' : 'error', size: 'small' },
+      { default: () => row.status === 1 ? '启用' : '禁用' }
+    )
+  },
+  { title: '创建时间', key: 'createdAt', width: 170 },
+  { title: '操作', key: 'action', width: 280, fixed: 'right',
+    render: (row) => [
+      h(NButton, {
+        text: true, type: 'primary', size: 'small',
+        onClick: () => openEdit(row)
+      }, { default: () => '编辑' }),
+      h(NPopconfirm, {
+        onPositiveClick: () => handleDelete(row.id)
+      }, {
+        trigger: () => h(NButton, {
+          text: true, type: 'error', size: 'small',
+          style: 'margin-left:8px'
+        }, { default: () => '删除' }),
+        default: () => '确定删除此分类？'
+      }),
+      h(NButton, {
+        text: true, type: 'primary', size: 'small',
+        style: 'margin-left:8px',
+        onClick: () => openAddChild(row)
+      }, { default: () => '添加子分类' })
+    ]
+  }
+]
+
+// Build tree for tree-select
+const categoryTree = computed(() => {
+  const build = (list) =>
+    list.map(c => ({ id: c.id, name: c.name, children: c.children ? build(c.children) : undefined }))
+  return build(categories.value)
+})
 
 onMounted(loadCategories)
 
 async function loadCategories() {
   loading.value = true
   try {
-    // We use the admin list which returns flat data, then build tree manually
     const res = await getAllCategories()
     const flat = res.data || []
-
-    // Build tree for display
     const tree = []
     const map = {}
     flat.forEach(c => { map[c.id] = { ...c, children: [] } })
@@ -163,7 +181,8 @@ async function loadCategories() {
     })
     categories.value = tree
     nextTick(() => {
-      tableRef.value?.toggleAllExpansion()
+      // Expand all rows
+      // Naive UI data-table tree uses default-expand-all or row-key expand behavior
     })
   } catch {
     // handled by interceptor
@@ -200,8 +219,11 @@ function openAddChild(row) {
 
 async function handleSubmit() {
   if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
 
   submitting.value = true
   try {
@@ -216,10 +238,10 @@ async function handleSubmit() {
     if (isEdit.value) {
       data.id = form.id
       await updateCategory(data)
-      ElMessage.success('更新成功')
+      message.success('更新成功')
     } else {
       await addCategory(data)
-      ElMessage.success('新增成功')
+      message.success('新增成功')
     }
     dialogVisible.value = false
     await loadCategories()
@@ -233,7 +255,7 @@ async function handleSubmit() {
 async function handleDelete(id) {
   try {
     await deleteCategory(id)
-    ElMessage.success('删除成功')
+    message.success('删除成功')
     await loadCategories()
   } catch {
     // handled by interceptor

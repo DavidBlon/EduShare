@@ -7,36 +7,33 @@
       </div>
     </div>
 
-    <el-card shadow="never">
-      <el-table :data="logs" v-loading="loading" border stripe>
-        <el-table-column type="index" label="#" width="55" align="center" />
-        <el-table-column prop="resourceTitle" label="资源名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="resourceId" label="资源ID" width="80" align="center" />
-        <el-table-column prop="ipAddress" label="IP 地址" width="160" align="center">
-          <template #default="{ row }">
-            <el-tag effect="plain">{{ row.ipAddress || '—' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="下载时间" width="180" align="center" />
-      </el-table>
-
+    <n-card :bordered="false">
+      <n-data-table
+        :columns="columns"
+        :data="logs"
+        :loading="loading"
+        :bordered="true"
+        :single-line="false"
+        size="small"
+      />
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="page"
+        <n-pagination
+          v-model:page="page"
           v-model:page-size="pageSize"
-          :total="total"
-          layout="total, sizes, prev, pager, next"
+          :page-count="pageCount"
           :page-sizes="[10, 20, 50]"
-          @current-change="loadLogs"
-          @size-change="loadLogs"
+          show-size-picker
+          @update:page="loadLogs"
+          @update:page-size="loadLogs"
         />
       </div>
-    </el-card>
+    </n-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, h, computed, onMounted } from 'vue'
+import { NTag } from 'naive-ui'
 import { getDownloadLogList } from '@/api/downloadLog'
 
 const loading = ref(false)
@@ -44,6 +41,18 @@ const logs = ref([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
+
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+
+const columns = [
+  { title: '#', key: 'index', width: 55, align: 'center', render: (_, index) => index + 1 },
+  { title: '资源名称', key: 'resourceTitle', minWidth: 200, ellipsis: { tooltip: true } },
+  { title: '资源ID', key: 'resourceId', width: 80, align: 'center' },
+  { title: 'IP 地址', key: 'ipAddress', width: 160, align: 'center',
+    render: (row) => h(NTag, { size: 'small' }, { default: () => row.ipAddress || '—' })
+  },
+  { title: '下载时间', key: 'createdAt', width: 180, align: 'center' }
+]
 
 onMounted(loadLogs)
 
