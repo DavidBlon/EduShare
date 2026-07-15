@@ -15,14 +15,14 @@ import { zhCN, dateZhCN } from 'naive-ui'
 
 const themeOverrides = {
   common: {
-    primaryColor: '#6366f1',
-    primaryColorHover: '#818cf8',
-    primaryColorPressed: '#4f46e5',
-    primaryColorSuppl: '#6366f1',
-    infoColor: '#6366f1',
-    successColor: '#10b981',
-    warningColor: '#f59e0b',
-    errorColor: '#ef4444'
+    primaryColor: '#0f6d70',
+    primaryColorHover: '#084b4e',
+    primaryColorPressed: '#063f42',
+    primaryColorSuppl: '#0f6d70',
+    infoColor: '#0f6d70',
+    successColor: '#36775d',
+    warningColor: '#c17b25',
+    errorColor: '#b84e44'
   }
 }
 </script>

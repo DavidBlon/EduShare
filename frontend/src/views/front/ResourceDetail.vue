@@ -43,7 +43,7 @@
               <h1 class="detail-title">{{ resource.title }}</h1>
               <div class="detail-meta">
                 <span v-if="resource.categoryName">
-                  <n-tag :bordered="false" color="#e8f4ff" class="detail-cat-tag">
+                  <n-tag :bordered="false" color="#e6f1ed" class="detail-cat-tag">
                     {{ resource.categoryName }}
                   </n-tag>
                 </span>
@@ -378,8 +378,8 @@ function formatDate(date) {
 }
 
 .detail-cover {
-  background: var(--bg);
-  border-radius: var(--radius-lg);
+  background: var(--paper);
+  border-radius: 0;
   overflow: hidden;
   margin-bottom: 24px;
   display: flex;
@@ -391,7 +391,7 @@ function formatDate(date) {
 .detail-image {
   max-height: 400px;
   width: 100%;
-  border-radius: 8px;
+  border-radius: 0;
   object-fit: contain;
 }
 
@@ -416,10 +416,11 @@ function formatDate(date) {
 }
 
 .detail-desc {
-  background: white;
-  border-radius: var(--radius-lg);
+  background: var(--paper);
+  border: 1px solid var(--border-light);
+  border-radius: 0;
   padding: 28px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
 .detail-desc h3 {
@@ -437,8 +438,8 @@ function formatDate(date) {
   content: '';
   width: 3px;
   height: 18px;
-  background: var(--primary-gradient);
-  border-radius: 2px;
+  background: var(--accent);
+  border-radius: 0;
 }
 
 .desc-content {
@@ -461,8 +462,11 @@ function formatDate(date) {
 }
 
 .sidebar-card {
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  border-radius: 0;
   overflow: hidden;
+  background: var(--paper);
+  box-shadow: var(--shadow-sm);
 }
 
 .sidebar-card-header {
@@ -471,8 +475,9 @@ function formatDate(date) {
   gap: 8px;
   font-weight: 600;
   font-size: 15px;
-  color: var(--text-primary);
-  background: linear-gradient(135deg, #f7f8fa, #f0f2f5);
+  color: var(--primary-dark);
+  background: #eef4ef;
+  border-bottom: 1px solid #d7e4dd;
 }
 
 .netdisk-card {
@@ -498,9 +503,10 @@ function formatDate(date) {
 }
 
 .link-value {
-  padding: 8px 12px;
-  background: var(--bg);
-  border-radius: 6px;
+  padding: 9px 12px;
+  background: #f5f1e8;
+  border: 1px solid var(--border-light);
+  border-radius: 0;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -521,10 +527,16 @@ function formatDate(date) {
 
 .toggle-code {
   flex-shrink: 0;
+  color: var(--primary-dark);
+}
+.toggle-code:hover {
+  background: var(--primary-bg);
+  color: var(--primary-dark);
 }
 
 .netdisk-divider {
   margin: 16px 0;
+  --n-color: var(--border-light);
 }
 
 .netdisk-actions {
@@ -535,20 +547,53 @@ function formatDate(date) {
 
 .action-btn {
   width: 100%;
-  border-radius: 8px;
-  font-size: 15px;
-  justify-content: center;
-}
-
-.primary-btn {
-  padding: 14px;
+  min-height: 46px;
+  border-radius: 0;
+  font-size: 14px;
   font-weight: 600;
+  justify-content: center;
+  letter-spacing: .04em;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
-.download-confirm-btn {
-  border: 1px dashed var(--primary);
-  color: var(--primary);
+:deep(.primary-btn.n-button) {
+  padding: 12px 14px;
+  color: #fffdf8;
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 3px 3px 0 rgba(8, 75, 78, .16);
+}
+:deep(.primary-btn.n-button:hover),
+:deep(.primary-btn.n-button:focus) {
+  color: #fffdf8;
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  box-shadow: 4px 4px 0 rgba(8, 75, 78, .18);
+  transform: translate(-1px, -1px);
+}
+:deep(.primary-btn.n-button:active) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 rgba(8, 75, 78, .16);
+}
+:deep(.action-btn:not(.primary-btn):not(.download-confirm-btn).n-button) {
+  color: var(--primary-dark);
+  background: var(--paper);
+  border-color: #a8c7bf;
+}
+:deep(.action-btn:not(.primary-btn):not(.download-confirm-btn).n-button:hover) {
+  color: var(--primary-dark);
   background: var(--primary-bg);
+  border-color: var(--primary);
+}
+:deep(.download-confirm-btn.n-button) {
+  color: #8a571b;
+  background: #fbefd9;
+  border: 1px dashed var(--accent);
+}
+:deep(.download-confirm-btn.n-button:hover) {
+  color: #724514;
+  background: var(--accent-soft);
+  border-color: #b87622;
 }
 
 .netdisk-tip {
@@ -562,9 +607,10 @@ function formatDate(date) {
 .empty-area {
   text-align: center;
   padding: 80px 20px;
-  background: white;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
+  background: var(--paper);
+  border: 1px solid var(--border-light);
+  border-radius: 0;
+  box-shadow: var(--shadow-sm);
 }
 .empty-inner {
   text-align: center;
