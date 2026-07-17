@@ -7,13 +7,9 @@
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" class="empty-area">
-        <div class="empty-inner">
-          <span class="empty-icon"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="9" x2="8.01" y2="9" stroke-width="2"/><line x1="16" y1="9" x2="16.01" y2="9" stroke-width="2"/><line x1="9" y1="16" x2="15" y2="16"/></svg></span>
-          <p>{{ error }}</p>
-          <n-button @click="$router.back()" class="empty-btn">返回上一页</n-button>
-        </div>
-      </div>
+      <EmptyState v-else-if="error" :text="error">
+        <n-button @click="$router.back()">返回上一页</n-button>
+      </EmptyState>
 
       <!-- Content -->
       <template v-else-if="resource">
@@ -26,7 +22,7 @@
             <n-breadcrumb-item>
               <router-link to="/resources">资源库</router-link>
             </n-breadcrumb-item>
-            <n-breadcrumb-item>{{ resource.title }}</n-breadcrumb-item>
+            <n-breadcrumb-item><span class="crumb-title">{{ resource.title }}</span></n-breadcrumb-item>
           </n-breadcrumb>
 
           <!-- Back button -->
@@ -40,6 +36,7 @@
           <!-- Main Info -->
           <div class="detail-main">
             <div class="detail-header">
+              <p class="detail-kicker">RESOURCE &middot; 档案编号 #{{ String(resource.id).padStart(4, '0') }}</p>
               <h1 class="detail-title">{{ resource.title }}</h1>
               <div class="detail-meta">
                 <span v-if="resource.categoryName">
@@ -75,8 +72,8 @@
               <n-tag
                 v-for="tag in resource.tags"
                 :key="tag.id"
-                type="success"
                 :bordered="false"
+                :color="{ color: '#edf3ee', textColor: '#617773' }"
                 class="detail-tag"
               >
                 {{ tag.name }}
@@ -97,6 +94,7 @@
                 <div class="sidebar-card-header">
                   <n-icon><LinkOutline /></n-icon>
                   <span>网盘信息</span>
+                  <em class="header-mark">EDU &middot; LINK</em>
                 </div>
               </template>
 
@@ -181,6 +179,7 @@ import {
 } from '@vicons/ionicons5'
 import { getResourceDetail, getNetdiskInfo, confirmDownload } from '@/api/resource'
 import { getTitleCover } from '@/utils/cover'
+import EmptyState from '@/components/front/EmptyState.vue'
 
 const message = useMessage()
 const route = useRoute()
@@ -341,6 +340,24 @@ function formatDate(date) {
 
 .detail-header {
   margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-kicker {
+  margin: 0 0 10px;
+  color: #a2743d;
+  font: 600 10px/1.2 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  letter-spacing: .16em;
+}
+
+.crumb-title {
+  display: inline-block;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .detail-title {
@@ -378,21 +395,19 @@ function formatDate(date) {
 }
 
 .detail-cover {
-  background: var(--paper);
-  border-radius: 0;
-  overflow: hidden;
+  position: relative;
+  aspect-ratio: 2 / 1;
+  max-height: 400px;
   margin-bottom: 24px;
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+  overflow: hidden;
+  background: #e6ece5;
   border: 1px solid var(--border-light);
 }
 
 .detail-image {
-  max-height: 400px;
   width: 100%;
-  border-radius: 0;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
 }
 
 .detail-tags {
@@ -462,11 +477,20 @@ function formatDate(date) {
 }
 
 .sidebar-card {
-  border: 1px solid var(--border-light);
+  position: relative;
+  border: 1px solid #bdcdbf;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
   background: var(--paper);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 8px 8px 0 rgba(15, 109, 112, .1);
+}
+.sidebar-card::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid #dfd6c7;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .sidebar-card-header {
@@ -478,6 +502,14 @@ function formatDate(date) {
   color: var(--primary-dark);
   background: #eef4ef;
   border-bottom: 1px solid #d7e4dd;
+}
+
+.header-mark {
+  margin-left: auto;
+  color: #9b8a6a;
+  font: 600 9px/1 'PingFang SC', sans-serif;
+  font-style: normal;
+  letter-spacing: .13em;
 }
 
 .netdisk-card {
@@ -514,7 +546,11 @@ function formatDate(date) {
 .code-value {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  padding: 8px 12px;
+  background: #fbf5e8;
+  border: 1px dashed var(--accent);
 }
 
 .code-text {
@@ -603,41 +639,12 @@ function formatDate(date) {
   text-align: center;
 }
 
-/* Empty area */
-.empty-area {
-  text-align: center;
-  padding: 80px 20px;
-  background: var(--paper);
-  border: 1px solid var(--border-light);
-  border-radius: 0;
-  box-shadow: var(--shadow-sm);
-}
-.empty-inner {
-  text-align: center;
-}
-.empty-icon {
-  display: block;
-  margin-bottom: 12px;
-}
-.empty-icon svg {
-  display: block;
-  margin: 0 auto;
-}
-.empty-area p {
-  font-size: 15px;
-  color: var(--text-secondary);
-  margin: 0 0 20px;
-}
-.empty-btn {
-  border-radius: 8px;
-}
-
 /* Loading */
 .loading-area {
-  background: white;
-  border-radius: var(--radius-lg);
+  background: var(--paper);
+  border: 1px solid var(--border-light);
   padding: 32px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
 @keyframes fadeInUp {
@@ -673,6 +680,9 @@ function formatDate(date) {
   }
   .detail-breadcrumb {
     font-size: 13px;
+  }
+  .crumb-title {
+    max-width: 160px;
   }
   .detail-cover {
     padding: 12px;

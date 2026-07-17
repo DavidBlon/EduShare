@@ -22,7 +22,10 @@ const themeOverrides = {
     infoColor: '#0f6d70',
     successColor: '#36775d',
     warningColor: '#c17b25',
-    errorColor: '#b84e44'
+    errorColor: '#b84e44',
+    // 编辑部/档案馆风格：组件统一直角，与自定义卡片保持一致
+    borderRadius: '0px',
+    borderRadiusSmall: '0px'
   }
 }
 </script>

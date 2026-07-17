@@ -156,7 +156,7 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2024-2025 小初学习资料圈. All rights reserved.</p>
+          <p>&copy; 2024-{{ currentYear }} 小初学习资料圈. All rights reserved.</p>
           <p class="footer-disclaimer">{{ briefDisclaimer || '本站资源仅供个人学习交流，请于下载后24小时内删除。如有侵权，请联系我们处理。' }}</p>
         </div>
       </div>
@@ -178,6 +178,7 @@ import { getUnreadCount, getRecentAnnouncements } from '@/api/announcement'
 
 const router = useRouter()
 const route = useRoute()
+const currentYear = new Date().getFullYear()
 
 // ----- Nav items -----
 const navItems = [
